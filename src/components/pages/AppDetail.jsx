@@ -12,6 +12,7 @@ import Select from "@/components/atoms/Select";
 import Badge from "@/components/atoms/Badge";
 import Button from "@/components/atoms/Button";
 import appService from "@/services/api/appService";
+import salesCommentService from "@/services/api/salesCommentService";
 
 const AppDetail = () => {
   const { appId } = useParams();
@@ -61,12 +62,10 @@ const AppDetail = () => {
       setCommentsError("");
       const id = parseInt(appId);
       if (isNaN(id)) return;
+if (isNaN(id)) return;
       
-      // Mock API call - replace with actual service when available
-      // const data = await appService.getComments(id);
-      const data = []; // Empty for now
+      const data = await salesCommentService.getByAppId(id);
       setComments(data || []);
-    } catch (err) {
       setCommentsError(err.message || "Failed to load comments");
     } finally {
       setCommentsLoading(false);
@@ -104,24 +103,15 @@ const AppDetail = () => {
         AuthorAvatar: "CU"
       };
 
-      if (editingComment) {
-        // Mock API call - replace with actual service when available
-        // await appService.updateComment(editingComment.Id, commentData);
-        setComments(prev => prev.map(c => 
-          c.Id === editingComment.Id 
-            ? { ...c, ...commentData, UpdatedAt: new Date().toISOString() }
-            : c
-        ));
+if (editingComment) {
+        await salesCommentService.update(editingComment.Id, commentData);
+        const updatedComment = await salesCommentService.getByAppId(id);
+        setComments(updatedComment || []);
         toast.success("Comment updated successfully");
       } else {
-        // Mock API call - replace with actual service when available
-        // const newComment = await appService.createComment(commentData);
-        const newComment = {
-          ...commentData,
-          Id: Date.now(),
-          CreatedAt: new Date().toISOString()
-        };
-        setComments(prev => [newComment, ...prev]);
+        const newComment = await salesCommentService.create(commentData);
+        const updatedComments = await salesCommentService.getByAppId(id);
+        setComments(updatedComments || []);
         toast.success("Comment added successfully");
       }
 
@@ -145,10 +135,13 @@ const AppDetail = () => {
   const handleDeleteComment = async (commentId) => {
     if (!window.confirm("Are you sure you want to delete this comment?")) return;
     
-    try {
-      // Mock API call - replace with actual service when available
-      // await appService.deleteComment(commentId);
-      setComments(prev => prev.filter(c => c.Id !== commentId));
+try {
+      await salesCommentService.delete(commentId);
+      const id = parseInt(appId);
+      if (!isNaN(id)) {
+        const updatedComments = await salesCommentService.getByAppId(id);
+        setComments(updatedComments || []);
+      }
       toast.success("Comment deleted successfully");
     } catch (err) {
       toast.error(err.message || "Failed to delete comment");
