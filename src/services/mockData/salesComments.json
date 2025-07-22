@@ -1,0 +1,52 @@
+[
+  {
+    "Id": 1,
+    "AppId": 1,
+    "Comment": "Initial demo scheduled for next week. Client showed strong interest in automation features.",
+    "SalesStatus": "demo_scheduled",
+    "AuthorName": "Sarah Johnson",
+    "AuthorAvatar": "SJ",
+    "CreatedAt": "2024-01-21T20:00:00Z",
+    "UpdatedAt": "2024-01-21T20:00:00Z"
+  },
+  {
+    "Id": 2,
+    "AppId": 1,
+    "Comment": "Demo completed successfully. Moving to proposal phase with custom pricing.",
+    "SalesStatus": "demo_completed",
+    "AuthorName": "Mike Chen",
+    "AuthorAvatar": "MC",
+    "CreatedAt": "2024-01-22T14:30:00Z",
+    "UpdatedAt": "2024-01-22T14:30:00Z"
+  },
+  {
+    "Id": 3,
+    "AppId": 2,
+    "Comment": "Client requested additional technical documentation before proceeding.",
+    "SalesStatus": "follow_up_required",
+    "AuthorName": "Emily Davis",
+    "AuthorAvatar": "ED",
+    "CreatedAt": "2024-01-20T16:45:00Z",
+    "UpdatedAt": "2024-01-20T16:45:00Z"
+  },
+  {
+    "Id": 4,
+    "AppId": 3,
+    "Comment": "Proposal sent with 20% discount. Waiting for decision by end of week.",
+    "SalesStatus": "proposal_sent",
+    "AuthorName": "David Wilson",
+    "AuthorAvatar": "DW",
+    "CreatedAt": "2024-01-19T11:15:00Z",
+    "UpdatedAt": "2024-01-19T11:15:00Z"
+  },
+  {
+    "Id": 5,
+    "AppId": 4,
+    "Comment": "Deal closed! Client signed contract for annual subscription.",
+    "SalesStatus": "closed_won",
+    "AuthorName": "Lisa Garcia",
+    "AuthorAvatar": "LG",
+    "CreatedAt": "2024-01-18T09:30:00Z",
+    "UpdatedAt": "2024-01-18T09:30:00Z"
+  }
+]

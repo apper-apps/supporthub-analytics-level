@@ -23,8 +23,27 @@ const StatusBadge = ({ status, type = "default" }) => {
         return { variant: "help", label: status.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) };
       } else if (technicalStatuses.includes(status)) {
         return { variant: "technical", label: status.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) };
-      } else if (specialStatuses.includes(status)) {
+} else if (specialStatuses.includes(status)) {
         return { variant: "special", label: status.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) };
+      }
+    }
+    
+    if (type === "sales") {
+      switch (status) {
+        case "demo_scheduled":
+          return { variant: "info", label: "Demo Scheduled" };
+        case "demo_completed":
+          return { variant: "primary", label: "Demo Completed" };
+        case "proposal_sent":
+          return { variant: "warning", label: "Proposal Sent" };
+        case "closed_won":
+          return { variant: "success", label: "Closed Won" };
+        case "closed_lost":
+          return { variant: "danger", label: "Closed Lost" };
+        case "follow_up_required":
+          return { variant: "neutral", label: "Follow Up Required" };
+        default:
+          return { variant: "default", label: status || "Unknown" };
       }
     }
     

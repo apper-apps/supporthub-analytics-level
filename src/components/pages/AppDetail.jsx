@@ -1,15 +1,17 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import Loading from "@/components/ui/Loading";
-import Error from "@/components/ui/Error";
+import { toast } from "react-toastify";
+import App from "@/App";
 import ApperIcon from "@/components/ApperIcon";
+import Error from "@/components/ui/Error";
+import Loading from "@/components/ui/Loading";
+import StatusBadge from "@/components/molecules/StatusBadge";
+import Select from "@/components/atoms/Select";
 import Badge from "@/components/atoms/Badge";
 import Button from "@/components/atoms/Button";
-import StatusBadge from "@/components/molecules/StatusBadge";
 import appService from "@/services/api/appService";
-import { toast } from "react-toastify";
 
 const AppDetail = () => {
   const { appId } = useParams();
@@ -17,7 +19,21 @@ const AppDetail = () => {
   const [app, setApp] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
+  
+  // Sales comments state
+  const [comments, setComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentsError, setCommentsError] = useState("");
+  const [currentSalesStatus, setCurrentSalesStatus] = useState("");
+  
+  // Comment modal state
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [editingComment, setEditingComment] = useState(null);
+  const [formLoading, setFormLoading] = useState(false);
+  const [commentForm, setCommentForm] = useState({
+    comment: "",
+    salesStatus: "demo_scheduled"
+  });
   const fetchApp = async () => {
     try {
       setLoading(true);
@@ -37,11 +53,127 @@ const AppDetail = () => {
     } finally {
       setLoading(false);
     }
+};
+
+  const fetchComments = async () => {
+    try {
+      setCommentsLoading(true);
+      setCommentsError("");
+      const id = parseInt(appId);
+      if (isNaN(id)) return;
+      
+      // Mock API call - replace with actual service when available
+      // const data = await appService.getComments(id);
+      const data = []; // Empty for now
+      setComments(data || []);
+    } catch (err) {
+      setCommentsError(err.message || "Failed to load comments");
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  const handleUpdateSalesStatus = async (newStatus) => {
+    try {
+      const id = parseInt(appId);
+      if (isNaN(id) || !newStatus) return;
+      
+      setCurrentSalesStatus(newStatus);
+      
+      // Mock API call - replace with actual service when available
+      // await appService.updateSalesStatus(id, newStatus);
+      toast.success("Sales status updated successfully");
+    } catch (err) {
+      toast.error(err.message || "Failed to update sales status");
+    }
+  };
+
+  const handleSaveComment = async () => {
+    if (!commentForm.comment.trim()) return;
+    
+    try {
+      setFormLoading(true);
+      const id = parseInt(appId);
+      if (isNaN(id)) return;
+
+      const commentData = {
+        AppId: id,
+        Comment: commentForm.comment.trim(),
+        SalesStatus: commentForm.salesStatus,
+        AuthorName: "Current User", // Replace with actual user
+        AuthorAvatar: "CU"
+      };
+
+      if (editingComment) {
+        // Mock API call - replace with actual service when available
+        // await appService.updateComment(editingComment.Id, commentData);
+        setComments(prev => prev.map(c => 
+          c.Id === editingComment.Id 
+            ? { ...c, ...commentData, UpdatedAt: new Date().toISOString() }
+            : c
+        ));
+        toast.success("Comment updated successfully");
+      } else {
+        // Mock API call - replace with actual service when available
+        // const newComment = await appService.createComment(commentData);
+        const newComment = {
+          ...commentData,
+          Id: Date.now(),
+          CreatedAt: new Date().toISOString()
+        };
+        setComments(prev => [newComment, ...prev]);
+        toast.success("Comment added successfully");
+      }
+
+      handleCloseModal();
+    } catch (err) {
+      toast.error(err.message || "Failed to save comment");
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleEditComment = (comment) => {
+    setEditingComment(comment);
+    setCommentForm({
+      comment: comment.Comment,
+      salesStatus: comment.SalesStatus
+    });
+    setShowCommentModal(true);
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm("Are you sure you want to delete this comment?")) return;
+    
+    try {
+      // Mock API call - replace with actual service when available
+      // await appService.deleteComment(commentId);
+      setComments(prev => prev.filter(c => c.Id !== commentId));
+      toast.success("Comment deleted successfully");
+    } catch (err) {
+      toast.error(err.message || "Failed to delete comment");
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowCommentModal(false);
+    setEditingComment(null);
+    setCommentForm({
+      comment: "",
+      salesStatus: "demo_scheduled"
+    });
   };
 
   useEffect(() => {
     fetchApp();
   }, [appId]);
+
+  useEffect(() => {
+    if (app) {
+      fetchComments();
+      setCurrentSalesStatus(app.SalesStatus || "");
+    }
+  }, [app, appId]);
 
   const handleBack = () => {
     navigate("/apps");
@@ -237,8 +369,207 @@ const AppDetail = () => {
             <ApperIcon name="RefreshCw" size={16} />
             <span>Refresh Analysis</span>
           </Button>
-        </div>
+</div>
       </motion.div>
+
+      {/* Sales Comments & Status Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.4 }}
+        className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+            <ApperIcon name="MessageSquare" size={20} className="mr-2" />
+            Sales Comments & Status
+          </h3>
+          <div className="flex items-center space-x-3">
+            {currentSalesStatus && (
+              <StatusBadge status={currentSalesStatus} type="sales" />
+            )}
+            <Button
+              onClick={() => setShowCommentModal(true)}
+              size="sm"
+              className="flex items-center space-x-2"
+            >
+              <ApperIcon name="Plus" size={16} />
+              <span>Add Comment</span>
+            </Button>
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Update Sales Status
+          </label>
+          <Select
+            value={currentSalesStatus}
+            onChange={(e) => handleUpdateSalesStatus(e.target.value)}
+            className="w-64"
+          >
+            <option value="">Select status...</option>
+            <option value="demo_scheduled">Demo Scheduled</option>
+            <option value="demo_completed">Demo Completed</option>
+            <option value="proposal_sent">Proposal Sent</option>
+            <option value="closed_won">Closed Won</option>
+            <option value="closed_lost">Closed Lost</option>
+            <option value="follow_up_required">Follow Up Required</option>
+          </Select>
+        </div>
+
+        {commentsLoading ? (
+          <Loading type="card" />
+        ) : commentsError ? (
+          <Error message={commentsError} onRetry={fetchComments} showRetry={true} />
+        ) : (
+          <div className="space-y-4">
+            <h4 className="font-medium text-gray-900">
+              Comments ({comments.length})
+            </h4>
+            
+            {comments.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <ApperIcon name="MessageSquare" size={48} className="mx-auto mb-3 opacity-50" />
+                <p>No comments yet. Add the first comment to track sales progress.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {comments
+                  .sort((a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt))
+                  .map((comment) => (
+                    <div
+                      key={comment.Id}
+                      className="bg-gray-50 rounded-lg p-4 border border-gray-200"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                            {comment.AuthorAvatar}
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-900">
+                              {comment.AuthorName}
+                            </div>
+                            <div className="flex items-center space-x-2 text-sm text-gray-500">
+                              <StatusBadge status={comment.SalesStatus} type="sales" />
+                              <span>•</span>
+                              <span>{format(new Date(comment.CreatedAt), "MMM dd, yyyy 'at' h:mm a")}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handleEditComment(comment)}
+                            className="text-gray-400 hover:text-gray-600 transition-colors"
+                          >
+                            <ApperIcon name="Edit2" size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteComment(comment.Id)}
+                            className="text-gray-400 hover:text-red-600 transition-colors"
+                          >
+                            <ApperIcon name="Trash2" size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-gray-700">{comment.Comment}</p>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+      </motion.div>
+
+      {/* Comment Modal */}
+      {showCommentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-lg shadow-xl w-full max-w-lg"
+          >
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {editingComment ? "Edit Comment" : "Add New Comment"}
+                </h3>
+                <button
+                  onClick={handleCloseModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <ApperIcon name="X" size={20} />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {formLoading ? (
+                <Loading type="modal" />
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Sales Status
+                    </label>
+                    <Select
+                      value={commentForm.salesStatus}
+                      onChange={(e) => setCommentForm(prev => ({ ...prev, salesStatus: e.target.value }))}
+                    >
+                      <option value="demo_scheduled">Demo Scheduled</option>
+                      <option value="demo_completed">Demo Completed</option>
+                      <option value="proposal_sent">Proposal Sent</option>
+                      <option value="closed_won">Closed Won</option>
+                      <option value="closed_lost">Closed Lost</option>
+                      <option value="follow_up_required">Follow Up Required</option>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Comment <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={commentForm.comment}
+                      onChange={(e) => setCommentForm(prev => ({ ...prev, comment: e.target.value }))}
+                      className="w-full h-24 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                      placeholder="Enter your comment about the sales progress..."
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
+              <Button
+                variant="ghost"
+                onClick={handleCloseModal}
+                disabled={formLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveComment}
+                disabled={formLoading || !commentForm.comment.trim()}
+              >
+                {formLoading ? (
+                  <>
+                    <ApperIcon name="Loader2" size={16} className="mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <ApperIcon name="Save" size={16} className="mr-2" />
+                    {editingComment ? "Update" : "Add"} Comment
+                  </>
+                )}
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

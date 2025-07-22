@@ -15,7 +15,7 @@ const Badge = React.forwardRef(({
     warning: "bg-yellow-100 text-yellow-800",
     danger: "bg-red-100 text-red-800",
     info: "bg-blue-100 text-blue-800",
-    // ChatAnalysisStatus specific variants
+// ChatAnalysisStatus specific variants
     positive: "bg-green-100 text-green-800 border-green-200",
     neutral: "bg-blue-100 text-blue-800 border-blue-200",
     struggle: "bg-yellow-100 text-yellow-800 border-yellow-200",
