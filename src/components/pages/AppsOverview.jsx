@@ -11,6 +11,7 @@ import ApperIcon from "@/components/ApperIcon";
 import Badge from "@/components/atoms/Badge";
 import Button from "@/components/atoms/Button";
 import appService from "@/services/api/appService";
+import userDetailsService from "@/services/api/userDetailsService";
 
 const AppsOverview = () => {
   const navigate = useNavigate();
@@ -24,7 +25,14 @@ const AppsOverview = () => {
   const [dbFilter, setDbFilter] = useState("");
   const [sortColumn, setSortColumn] = useState("");
   const [sortDirection, setSortDirection] = useState("asc");
-
+  
+  // Modal state
+  const [showModal, setShowModal] = useState(false);
+  const [selectedApp, setSelectedApp] = useState(null);
+  const [appDetails, setAppDetails] = useState(null);
+  const [userDetails, setUserDetails] = useState(null);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalError, setModalError] = useState("");
   const fetchApps = async () => {
     try {
       setLoading(true);
@@ -102,14 +110,41 @@ const AppsOverview = () => {
     }
   };
 
-  const handleAppClick = (app) => {
-    navigate(`/apps/${app.Id}`);
+const handleViewDetails = async (app) => {
+    setSelectedApp(app);
+    setShowModal(true);
+    setModalLoading(true);
+    setModalError("");
+    setAppDetails(null);
+    setUserDetails(null);
+
+    try {
+      // Fetch app details and user details
+      const [appData, userData] = await Promise.all([
+        appService.getById(app.Id),
+        userDetailsService.getById(app.UserId)
+      ]);
+      
+      setAppDetails(appData);
+      setUserDetails(userData);
+    } catch (err) {
+      setModalError(err.message || "Failed to load app details");
+    } finally {
+      setModalLoading(false);
+    }
   };
 
   const handleViewLogs = (app) => {
     navigate(`/logs?appId=${app.Id}`);
   };
 
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedApp(null);
+    setAppDetails(null);
+    setUserDetails(null);
+    setModalError("");
+  };
   const getUniqueCategories = () => {
     const categories = [...new Set(apps.map(app => app.AppCategory))];
     return categories.map(cat => ({ value: cat, label: cat }));
@@ -187,14 +222,14 @@ const AppsOverview = () => {
     }
   ];
 
-  const actions = [
+const actions = [
     {
       icon: "FileText",
       onClick: handleViewLogs
     },
     {
       icon: "Eye",
-      onClick: handleAppClick
+      onClick: handleViewDetails
     }
   ];
 
@@ -225,7 +260,7 @@ const AppsOverview = () => {
   if (loading) return <Loading type="table" />;
   if (error) return <Error message={error} onRetry={fetchApps} />;
 
-  return (
+return (
     <div className="space-y-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -259,12 +294,214 @@ const AppsOverview = () => {
           onSort={handleSort}
           sortColumn={sortColumn}
           sortDirection={sortDirection}
-          onRowClick={handleAppClick}
+          onRowClick={handleViewDetails}
           actions={actions}
           emptyMessage="No apps found"
           emptyDescription="No apps match your current filters. Try adjusting your search criteria."
         />
       </motion.div>
+
+      {/* App Details Modal */}
+      {showModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={closeModal}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              closeModal();
+            }
+          }}
+          tabIndex={-1}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">
+                App Details - {selectedApp?.AppName}
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={closeModal}
+                className="h-8 w-8 p-0"
+              >
+                <ApperIcon name="X" size={16} />
+              </Button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              {modalLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                </div>
+              ) : modalError ? (
+                <div className="text-center py-12">
+                  <ApperIcon name="AlertCircle" size={48} className="text-red-500 mx-auto mb-4" />
+                  <p className="text-red-600 mb-4">{modalError}</p>
+                  <Button
+                    onClick={() => handleViewDetails(selectedApp)}
+                    variant="outline"
+                  >
+                    <ApperIcon name="RotateCcw" size={16} className="mr-2" />
+                    Retry
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Left Column - App Information */}
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">App Information</h3>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-500">App ID</span>
+                          <span className="text-sm font-mono text-gray-900">{selectedApp?.Id}</span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-500">Category</span>
+                          <Badge variant="secondary">{selectedApp?.AppCategory}</Badge>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-500">Canvas App ID</span>
+                          <span className="text-sm font-mono text-gray-700">{selectedApp?.CanvasAppId}</span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-500">Database Connection</span>
+                          <div className="flex items-center">
+                            <ApperIcon
+                              name={selectedApp?.IsDbConnected ? "CheckCircle" : "XCircle"}
+                              size={16}
+                              className={selectedApp?.IsDbConnected ? "text-green-500" : "text-red-500"}
+                            />
+                            <span className={`ml-2 text-sm ${selectedApp?.IsDbConnected ? "text-green-600" : "text-red-600"}`}>
+                              {selectedApp?.IsDbConnected ? "Connected" : "Disconnected"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Activity Section */}
+                    <div>
+                      <h4 className="text-md font-semibold text-gray-900 mb-4">Activity</h4>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <ApperIcon name="MessageSquare" size={16} className="text-gray-400 mr-2" />
+                            <span className="text-sm font-medium text-gray-500">Total Messages</span>
+                          </div>
+                          <span className="text-sm font-mono text-gray-900">{selectedApp?.TotalMessages}</span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-500">Last Activity</span>
+                          <span className="text-sm text-gray-700">
+                            {selectedApp?.LastMessageAt ? format(new Date(selectedApp.LastMessageAt), "MMM dd, yyyy HH:mm") : "N/A"}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-500">Chat Status</span>
+                          <StatusBadge status={selectedApp?.LastChatAnalysisStatus} type="chatAnalysis" />
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-500">Last AI Scan</span>
+                          <span className="text-sm text-gray-700">
+                            {selectedApp?.LastAIScanAt ? format(new Date(selectedApp.LastAIScanAt), "MMM dd, yyyy") : "Never"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column - User Information */}
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">User Information</h3>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <ApperIcon name="User" size={16} className="text-gray-400 mr-2" />
+                            <span className="text-sm font-medium text-gray-500">Name</span>
+                          </div>
+                          <span className="text-sm text-gray-900">{userDetails?.Name || "Loading..."}</span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-500">Email</span>
+                          <a
+                            href={`mailto:${userDetails?.Email}`}
+                            className="text-sm text-primary-600 hover:text-primary-700 underline"
+                          >
+                            {userDetails?.Email || "Loading..."}
+                          </a>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-500">Plan</span>
+                          <Badge 
+                            variant={userDetails?.Plan === "Pro" ? "default" : userDetails?.Plan === "Basic" ? "secondary" : "outline"}
+                          >
+                            {userDetails?.Plan || "Loading..."}
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-500">Total Apps</span>
+                          <span className="text-sm font-mono text-gray-900">{userDetails?.TotalApps || "0"}</span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-500">Credits Used</span>
+                          <span className="text-sm font-mono text-gray-900">{userDetails?.CreditsUsed || "0"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Timeline Section */}
+                    <div>
+                      <h4 className="text-md font-semibold text-gray-900 mb-4">Timeline</h4>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-500">Created</span>
+                          <span className="text-sm text-gray-700">
+                            {selectedApp?.CreatedAt ? format(new Date(selectedApp.CreatedAt), "MMM dd, yyyy") : "N/A"}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-500">Sales Status</span>
+                          <Badge 
+                            variant={
+                              userDetails?.SalesStatus === "Demo Scheduled" ? "default" :
+                              userDetails?.SalesStatus === "Converted" ? "success" :
+                              userDetails?.SalesStatus === "Follow Up" ? "warning" : "secondary"
+                            }
+                          >
+                            {userDetails?.SalesStatus || "Unknown"}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
