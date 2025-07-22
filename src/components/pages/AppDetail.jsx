@@ -56,16 +56,16 @@ const AppDetail = () => {
     }
 };
 
-  const fetchComments = async () => {
+const fetchComments = async () => {
     try {
       setCommentsLoading(true);
       setCommentsError("");
       const id = parseInt(appId);
       if (isNaN(id)) return;
-if (isNaN(id)) return;
       
       const data = await salesCommentService.getByAppId(id);
       setComments(data || []);
+    } catch (err) {
       setCommentsError(err.message || "Failed to load comments");
     } finally {
       setCommentsLoading(false);
