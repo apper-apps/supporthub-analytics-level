@@ -286,10 +286,23 @@ const columns = [
       key: "SalesStatus",
       label: "Sales Status",
       sortable: false,
-      render: (value, row) => (
+render: (value, row) => (
         <Select
           value={value || "No Contacted"}
-          onChange={(e) => handleSalesStatusChange(row.Id, e.target.value)}
+          onChange={(e) => {
+            const newValue = e.target.value;
+            const currentValue = value || "No Contacted";
+            if (newValue !== currentValue) {
+              handleSalesStatusChange(row.Id, newValue);
+            }
+          }}
+          onClick={(e) => {
+            const clickedValue = e.target.value;
+            const currentValue = value || "No Contacted";
+            if (clickedValue === currentValue) {
+              e.preventDefault();
+            }
+          }}
           className="min-w-[160px]"
         >
           {getSalesStatusOptions().map(option => (
