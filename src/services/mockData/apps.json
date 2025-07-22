@@ -1,0 +1,98 @@
+[
+  {
+    "Id": 1,
+    "AppName": "Customer CRM Dashboard",
+    "AppCategory": "Business Management",
+    "IsDbConnected": true,
+    "CanvasAppId": "canvas_001",
+    "TotalMessages": 124,
+    "LastMessageAt": "2024-03-15T14:30:00Z",
+    "LastChatAnalysisStatus": "smooth_progress",
+    "LastAIScanDate": "2024-03-15T14:35:00Z",
+    "CreatedAt": "2024-01-20T09:15:00Z"
+  },
+  {
+    "Id": 2,
+    "AppName": "Inventory Tracker Pro",
+    "AppCategory": "Operations",
+    "IsDbConnected": true,
+    "CanvasAppId": "canvas_002",
+    "TotalMessages": 89,
+    "LastMessageAt": "2024-03-15T12:45:00Z",
+    "LastChatAnalysisStatus": "needs_guidance",
+    "LastAIScanDate": "2024-03-15T12:50:00Z",
+    "CreatedAt": "2024-01-25T11:30:00Z"
+  },
+  {
+    "Id": 3,
+    "AppName": "Employee Portal",
+    "AppCategory": "HR Management",
+    "IsDbConnected": false,
+    "CanvasAppId": "canvas_003",
+    "TotalMessages": 67,
+    "LastMessageAt": "2024-03-15T10:20:00Z",
+    "LastChatAnalysisStatus": "frustrated",
+    "LastAIScanDate": "2024-03-15T10:25:00Z",
+    "CreatedAt": "2024-02-01T14:20:00Z"
+  },
+  {
+    "Id": 4,
+    "AppName": "Project Timeline Manager",
+    "AppCategory": "Project Management",
+    "IsDbConnected": true,
+    "CanvasAppId": "canvas_004",
+    "TotalMessages": 156,
+    "LastMessageAt": "2024-03-15T16:10:00Z",
+    "LastChatAnalysisStatus": "building_actively",
+    "LastAIScanDate": "2024-03-15T16:15:00Z",
+    "CreatedAt": "2024-01-15T08:45:00Z"
+  },
+  {
+    "Id": 5,
+    "AppName": "Sales Pipeline Tracker",
+    "AppCategory": "Sales",
+    "IsDbConnected": true,
+    "CanvasAppId": "canvas_005",
+    "TotalMessages": 203,
+    "LastMessageAt": "2024-03-15T15:55:00Z",
+    "LastChatAnalysisStatus": "goal_achieved",
+    "LastAIScanDate": "2024-03-15T16:00:00Z",
+    "CreatedAt": "2024-01-10T13:30:00Z"
+  },
+  {
+    "Id": 6,
+    "AppName": "Budget Calculator",
+    "AppCategory": "Finance",
+    "IsDbConnected": false,
+    "CanvasAppId": "canvas_006",
+    "TotalMessages": 45,
+    "LastMessageAt": "2024-03-15T09:30:00Z",
+    "LastChatAnalysisStatus": "abandonment_risk",
+    "LastAIScanDate": "2024-03-15T09:35:00Z",
+    "CreatedAt": "2024-02-20T16:45:00Z"
+  },
+  {
+    "Id": 7,
+    "AppName": "Training Module Hub",
+    "AppCategory": "Education",
+    "IsDbConnected": true,
+    "CanvasAppId": "canvas_007",
+    "TotalMessages": 98,
+    "LastMessageAt": "2024-03-15T13:20:00Z",
+    "LastChatAnalysisStatus": "learning_effectively",
+    "LastAIScanDate": "2024-03-15T13:25:00Z",
+    "CreatedAt": "2024-01-30T10:15:00Z"
+  },
+  {
+    "Id": 8,
+    "AppName": "Asset Management System",
+    "AppCategory": "Operations",
+    "IsDbConnected": true,
+    "CanvasAppId": "canvas_008",
+    "TotalMessages": 134,
+    "LastMessageAt": "2024-03-15T11:40:00Z",
+    "LastChatAnalysisStatus": "troubleshooting_db",
+    "LastAIScanDate": "2024-03-15T11:45:00Z",
+    "CreatedAt": "2024-02-05T12:30:00Z"
+  }
+]
