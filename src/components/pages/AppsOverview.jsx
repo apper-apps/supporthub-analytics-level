@@ -10,11 +10,11 @@ import Error from "@/components/ui/Error";
 import ApperIcon from "@/components/ApperIcon";
 import Badge from "@/components/atoms/Badge";
 import Button from "@/components/atoms/Button";
+import Select from "@/components/atoms/Select";
 import appService from "@/services/api/appService";
 import userDetailsService from "@/services/api/userDetailsService";
-
 const AppsOverview = () => {
-  const navigate = useNavigate();
+const navigate = useNavigate();
   const [apps, setApps] = useState([]);
   const [filteredApps, setFilteredApps] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,6 +25,7 @@ const AppsOverview = () => {
   const [dbFilter, setDbFilter] = useState("");
   const [sortColumn, setSortColumn] = useState("");
   const [sortDirection, setSortDirection] = useState("asc");
+  const [usersMap, setUsersMap] = useState({});
   
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -33,13 +34,24 @@ const AppsOverview = () => {
   const [userDetails, setUserDetails] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState("");
-  const fetchApps = async () => {
+const fetchApps = async () => {
     try {
       setLoading(true);
       setError("");
       const data = await appService.getAll();
       setApps(data || []);
       setFilteredApps(data || []);
+      
+      // Fetch user details for all apps
+      if (data && data.length > 0) {
+        const userIds = [...new Set(data.map(app => app.UserId).filter(Boolean))];
+        const users = await userDetailsService.getByIds(userIds);
+        const userMap = {};
+        users.forEach(user => {
+          userMap[user.Id] = user;
+        });
+        setUsersMap(userMap);
+      }
     } catch (err) {
       setError(err.message || "Failed to load apps");
     } finally {
@@ -144,7 +156,34 @@ const handleViewDetails = async (app) => {
     setAppDetails(null);
     setUserDetails(null);
     setModalError("");
+};
+
+  const handleSalesStatusChange = async (appId, newStatus) => {
+    try {
+      await appService.update(appId, { SalesStatus: newStatus });
+      setApps(prev => prev.map(app => 
+        app.Id === appId ? { ...app, SalesStatus: newStatus } : app
+      ));
+      setFilteredApps(prev => prev.map(app => 
+        app.Id === appId ? { ...app, SalesStatus: newStatus } : app
+      ));
+    } catch (err) {
+      console.error('Failed to update sales status:', err);
+    }
   };
+
+  const getSalesStatusOptions = () => [
+    { value: "Demo Scheduled", label: "Demo Scheduled" },
+    { value: "Demo Completed", label: "Demo Completed" },
+    { value: "Proposal Sent", label: "Proposal Sent" },
+    { value: "Closed Won", label: "Closed Won" },
+    { value: "Closed Lost", label: "Closed Lost" },
+    { value: "Follow Up Schedule", label: "Follow Up Schedule" },
+    { value: "No Contacted", label: "No Contacted" },
+    { value: "Negotiating", label: "Negotiating" },
+    { value: "Contract review", label: "Contract Review" }
+  ];
+  
   const getUniqueCategories = () => {
     const categories = [...new Set(apps.map(app => app.AppCategory))];
     return categories.map(cat => ({ value: cat, label: cat }));
@@ -157,8 +196,7 @@ const handleViewDetails = async (app) => {
       label: status.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) 
     }));
   };
-
-  const columns = [
+const columns = [
     {
       key: "AppName",
       label: "App Name",
@@ -169,6 +207,30 @@ const handleViewDetails = async (app) => {
           <div className="text-sm text-gray-500">{row.CanvasAppId}</div>
         </div>
       )
+    },
+    {
+      key: "UserId",
+      label: "User",
+      sortable: false,
+      render: (value, row) => {
+        const user = usersMap[value];
+        if (!user) {
+          return <span className="text-gray-400 text-sm">Loading...</span>;
+        }
+        return (
+          <div>
+            <div className="font-medium text-gray-900">{user.Name}</div>
+            <div className="text-sm text-gray-500">{user.Email}</div>
+            <div className="mt-1">
+              <Badge 
+                variant={user.Plan === "Pro" ? "default" : user.Plan === "Enterprise" ? "default" : user.Plan === "Basic" ? "secondary" : "outline"}
+              >
+                {user.Plan}
+              </Badge>
+            </div>
+          </div>
+        );
+      }
     },
     {
       key: "AppCategory",
@@ -215,13 +277,30 @@ const handleViewDetails = async (app) => {
       label: "Last Activity",
       sortable: true,
       render: (value) => (
-        <span className="text-sm text-gray-500">
+<span className="text-sm text-gray-500">
           {format(new Date(value), "MMM dd, yyyy HH:mm")}
         </span>
       )
+    },
+    {
+      key: "SalesStatus",
+      label: "Sales Status",
+      sortable: false,
+      render: (value, row) => (
+        <Select
+          value={value || "No Contacted"}
+          onChange={(e) => handleSalesStatusChange(row.Id, e.target.value)}
+          className="min-w-[160px]"
+        >
+          {getSalesStatusOptions().map(option => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </Select>
+      )
     }
   ];
-
 const actions = [
     {
       icon: "FileText",

@@ -49,6 +49,11 @@ class UserDetailsService {
     }
     throw new Error("User not found");
   }
+async getByIds(ids) {
+    await this.delay(250);
+    const numericIds = ids.map(id => parseInt(id));
+    return this.data.filter(user => numericIds.includes(user.Id));
+  }
 
   async searchByName(query) {
     await this.delay(250);

@@ -9,10 +9,13 @@
     "LastMessageAt": "2024-03-15T14:30:00Z",
     "LastChatAnalysisStatus": "smooth_progress",
     "LastAIScanDate": "2024-03-15T14:35:00Z",
-    "CreatedAt": "2024-01-20T09:15:00Z"
+    "CreatedAt": "2024-01-20T09:15:00Z",
+    "UserId": 1,
+    "SalesStatus": "Demo Scheduled"
   },
   {
     "Id": 2,
+"Id": 2,
     "AppName": "Inventory Tracker Pro",
     "AppCategory": "Operations",
     "IsDbConnected": true,
@@ -21,10 +24,13 @@
     "LastMessageAt": "2024-03-15T12:45:00Z",
     "LastChatAnalysisStatus": "needs_guidance",
     "LastAIScanDate": "2024-03-15T12:50:00Z",
-    "CreatedAt": "2024-01-25T11:30:00Z"
+    "CreatedAt": "2024-01-25T11:30:00Z",
+    "UserId": 2,
+    "SalesStatus": "Proposal Sent"
   },
   {
     "Id": 3,
+"Id": 3,
     "AppName": "Employee Portal",
     "AppCategory": "HR Management",
     "IsDbConnected": false,
@@ -33,10 +39,13 @@
     "LastMessageAt": "2024-03-15T10:20:00Z",
     "LastChatAnalysisStatus": "frustrated",
     "LastAIScanDate": "2024-03-15T10:25:00Z",
-    "CreatedAt": "2024-02-01T14:20:00Z"
+    "CreatedAt": "2024-02-01T14:20:00Z",
+    "UserId": 3,
+    "SalesStatus": "Demo Completed"
   },
   {
     "Id": 4,
+"Id": 4,
     "AppName": "Project Timeline Manager",
     "AppCategory": "Project Management",
     "IsDbConnected": true,
@@ -45,10 +54,13 @@
     "LastMessageAt": "2024-03-15T16:10:00Z",
     "LastChatAnalysisStatus": "building_actively",
     "LastAIScanDate": "2024-03-15T16:15:00Z",
-    "CreatedAt": "2024-01-15T08:45:00Z"
+    "CreatedAt": "2024-01-15T08:45:00Z",
+    "UserId": 4,
+    "SalesStatus": "Closed Won"
   },
   {
     "Id": 5,
+"Id": 5,
     "AppName": "Sales Pipeline Tracker",
     "AppCategory": "Sales",
     "IsDbConnected": true,
@@ -57,10 +69,13 @@
     "LastMessageAt": "2024-03-15T15:55:00Z",
     "LastChatAnalysisStatus": "goal_achieved",
     "LastAIScanDate": "2024-03-15T16:00:00Z",
-    "CreatedAt": "2024-01-10T13:30:00Z"
+    "CreatedAt": "2024-01-10T13:30:00Z",
+    "UserId": 5,
+    "SalesStatus": "Follow Up Schedule"
   },
   {
     "Id": 6,
+"Id": 6,
     "AppName": "Budget Calculator",
     "AppCategory": "Finance",
     "IsDbConnected": false,
@@ -69,10 +84,13 @@
     "LastMessageAt": "2024-03-15T09:30:00Z",
     "LastChatAnalysisStatus": "abandonment_risk",
     "LastAIScanDate": "2024-03-15T09:35:00Z",
-    "CreatedAt": "2024-02-20T16:45:00Z"
+    "CreatedAt": "2024-02-20T16:45:00Z",
+    "UserId": 6,
+    "SalesStatus": "No Contacted"
   },
   {
     "Id": 7,
+"Id": 7,
     "AppName": "Training Module Hub",
     "AppCategory": "Education",
     "IsDbConnected": true,
@@ -81,10 +99,13 @@
     "LastMessageAt": "2024-03-15T13:20:00Z",
     "LastChatAnalysisStatus": "learning_effectively",
     "LastAIScanDate": "2024-03-15T13:25:00Z",
-    "CreatedAt": "2024-01-30T10:15:00Z"
+    "CreatedAt": "2024-01-30T10:15:00Z",
+    "UserId": 1,
+    "SalesStatus": "Negotiating"
   },
   {
     "Id": 8,
+"Id": 8,
     "AppName": "Asset Management System",
     "AppCategory": "Operations",
     "IsDbConnected": true,
@@ -93,6 +114,8 @@
     "LastMessageAt": "2024-03-15T11:40:00Z",
     "LastChatAnalysisStatus": "troubleshooting_db",
     "LastAIScanDate": "2024-03-15T11:45:00Z",
-    "CreatedAt": "2024-02-05T12:30:00Z"
+    "CreatedAt": "2024-02-05T12:30:00Z",
+    "UserId": 2,
+    "SalesStatus": "Contract review"
   }
 ]
