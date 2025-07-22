@@ -19,7 +19,7 @@ const Select = React.forwardRef(({
       >
         {children}
       </select>
-      <ApperIcon 
+<ApperIcon 
         name="ChevronDown" 
         size={16} 
         className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" 
