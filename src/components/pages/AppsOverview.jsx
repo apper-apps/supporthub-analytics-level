@@ -1,16 +1,17 @@
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+import App from "@/App";
+import ApperIcon from "@/components/ApperIcon";
+import Error from "@/components/ui/Error";
+import Loading from "@/components/ui/Loading";
 import DataTable from "@/components/organisms/DataTable";
 import FilterBar from "@/components/molecules/FilterBar";
 import StatusBadge from "@/components/molecules/StatusBadge";
-import Loading from "@/components/ui/Loading";
-import Error from "@/components/ui/Error";
-import ApperIcon from "@/components/ApperIcon";
+import Select from "@/components/atoms/Select";
 import Badge from "@/components/atoms/Badge";
 import Button from "@/components/atoms/Button";
-import Select from "@/components/atoms/Select";
 import appService from "@/services/api/appService";
 import userDetailsService from "@/services/api/userDetailsService";
 const AppsOverview = () => {
@@ -120,6 +121,10 @@ const fetchApps = async () => {
       setSortColumn(column);
       setSortDirection("asc");
     }
+};
+
+  const handleRowClick = (app) => {
+    navigate(`/apps/${app.Id}`);
   };
 
 const handleViewDetails = async (app) => {
@@ -146,7 +151,7 @@ const handleViewDetails = async (app) => {
     }
   };
 
-  const handleViewLogs = (app) => {
+const handleViewLogs = (app) => {
     navigate(`/logs?appId=${app.Id}`);
   };
 
@@ -274,11 +279,11 @@ const columns = [
     },
     {
       key: "LastMessageAt",
-      label: "Last Activity",
+label: "Last Activity",
       sortable: true,
       render: (value) => (
-<span className="text-sm text-gray-500">
-          {format(new Date(value), "MMM dd, yyyy HH:mm")}
+        <span className="text-sm text-gray-500">
+          {value ? format(new Date(value), "MMM dd, yyyy HH:mm") : "Never"}
         </span>
       )
     },
@@ -379,14 +384,14 @@ return (
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
       >
-        <DataTable
+<DataTable
           columns={columns}
           data={filteredApps}
           loading={loading}
           onSort={handleSort}
           sortColumn={sortColumn}
           sortDirection={sortDirection}
-          onRowClick={handleViewDetails}
+          onRowClick={handleRowClick}
           actions={actions}
           emptyMessage="No apps found"
           emptyDescription="No apps match your current filters. Try adjusting your search criteria."
@@ -594,7 +599,7 @@ return (
           </motion.div>
         </div>
       )}
-    </div>
+</div>
   );
 };
 
