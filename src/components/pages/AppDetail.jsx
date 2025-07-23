@@ -3,7 +3,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
-import App from "@/App";
 import ApperIcon from "@/components/ApperIcon";
 import Error from "@/components/ui/Error";
 import Loading from "@/components/ui/Loading";
