@@ -11,14 +11,18 @@ import Select from "@/components/atoms/Select";
 import Badge from "@/components/atoms/Badge";
 import Button from "@/components/atoms/Button";
 import appService from "@/services/api/appService";
+import userDetailsService from "@/services/api/userDetailsService";
 import salesCommentService from "@/services/api/salesCommentService";
 
 const AppDetail = () => {
   const { appId } = useParams();
   const navigate = useNavigate();
-  const [app, setApp] = useState(null);
+const [app, setApp] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [userLoading, setUserLoading] = useState(false);
   const [error, setError] = useState("");
+  const [userError, setUserError] = useState("");
   
   // Sales comments state
   const [comments, setComments] = useState([]);
@@ -69,8 +73,21 @@ const fetchComments = async () => {
     } finally {
       setCommentsLoading(false);
     }
-  };
+};
 
+  const fetchUser = async (userId) => {
+    try {
+      setUserLoading(true);
+      setUserError("");
+      const userData = await userDetailsService.getById(userId);
+      setUser(userData);
+    } catch (err) {
+      setUserError(err.message || "Failed to load user details");
+      toast.error(err.message || "Failed to load user details");
+    } finally {
+      setUserLoading(false);
+    }
+  };
   const handleUpdateSalesStatus = async (newStatus) => {
     try {
       const id = parseInt(appId);
@@ -160,10 +177,13 @@ try {
     fetchApp();
   }, [appId]);
 
-  useEffect(() => {
+useEffect(() => {
     if (app) {
       fetchComments();
       setCurrentSalesStatus(app.SalesStatus || "");
+      if (app.UserId) {
+        fetchUser(app.UserId);
+      }
     }
   }, [app, appId]);
 
@@ -323,6 +343,100 @@ try {
               </div>
             </div>
           </div>
+</div>
+
+        {/* User Information */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <ApperIcon name="User" size={20} className="mr-2" />
+            User Information
+          </h3>
+          {userLoading ? (
+            <div className="space-y-4">
+              <div className="animate-shimmer h-4 bg-gray-100 rounded w-3/4"></div>
+              <div className="animate-shimmer h-4 bg-gray-100 rounded w-1/2"></div>
+              <div className="animate-shimmer h-4 bg-gray-100 rounded w-2/3"></div>
+            </div>
+          ) : userError ? (
+            <div className="text-center py-8">
+              <ApperIcon name="AlertCircle" size={32} className="text-red-500 mx-auto mb-2" />
+              <p className="text-red-600 text-sm mb-3">{userError}</p>
+              <Button
+                onClick={() => app?.UserId && fetchUser(app.UserId)}
+                variant="outline"
+                size="sm"
+              >
+                <ApperIcon name="RotateCcw" size={16} className="mr-2" />
+                Retry
+              </Button>
+            </div>
+          ) : user ? (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
+                <div className="flex items-center">
+                  <ApperIcon name="User" size={16} className="text-gray-400 mr-2" />
+                  <span className="text-gray-600">Name</span>
+                </div>
+                <span className="font-medium text-gray-900">{user.Name}</span>
+              </div>
+              <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
+                <span className="text-gray-600">Email</span>
+                <a
+                  href={`mailto:${user.Email}`}
+                  className="text-primary-600 hover:text-primary-700 underline transition-colors"
+                >
+                  {user.Email}
+                </a>
+              </div>
+              <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
+                <span className="text-gray-600">Plan</span>
+                <Badge 
+                  variant={
+                    user.Plan === "Enterprise" ? "default" : 
+                    user.Plan === "Pro" ? "default" : 
+                    user.Plan === "Basic" ? "secondary" : "outline"
+                  }
+                >
+                  {user.Plan}
+                </Badge>
+              </div>
+              <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
+                <span className="text-gray-600">Total Apps</span>
+                <span className="font-mono font-semibold text-gray-900">
+                  {user.TotalApps.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
+                <span className="text-gray-600">Apps with DB</span>
+                <span className="font-mono font-semibold text-gray-900">
+                  {user.TotalAppWithDB.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
+                <span className="text-gray-600">Credits Used</span>
+                <span className="font-mono font-semibold text-gray-900">
+                  {user.TotalCreditsUsed.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
+                <span className="text-gray-600">Platform Signup</span>
+                <span className="text-gray-900">
+                  {format(new Date(user.PlatformSignupDate), "MMM dd, yyyy")}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
+                <span className="text-gray-600">Apper Signup</span>
+                <span className="text-gray-900">
+                  {format(new Date(user.ApperSignupDate), "MMM dd, yyyy")}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <ApperIcon name="User" size={32} className="mx-auto mb-2 opacity-50" />
+              <p>No user information available</p>
+            </div>
+          )}
         </div>
       </motion.div>
 
