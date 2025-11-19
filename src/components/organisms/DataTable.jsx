@@ -144,6 +144,12 @@ const DataTable = ({
           </tbody>
         </table>
       </div>
+{/* Results info for pagination */}
+      {data && data.length > 0 && (
+        <div className="px-6 py-3 bg-gray-50 border-t border-gray-200 text-sm text-gray-600">
+          {data.length} {data.length === 1 ? 'result' : 'results'} total
+        </div>
+      )}
     </div>
   );
 };

@@ -5,9 +5,11 @@ const SearchBar = ({
   placeholder = "Search...",
   value,
   onChange,
-  className = ""
+  className = "",
+  onFocus,
+  onBlur
 }) => {
-  return (
+return (
     <div className={`relative ${className}`}>
       <ApperIcon 
         name="Search" 
@@ -18,6 +20,8 @@ const SearchBar = ({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        onFocus={onFocus}
+        onBlur={onBlur}
         className="pl-10"
       />
     </div>

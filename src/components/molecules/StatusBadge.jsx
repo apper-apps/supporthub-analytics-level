@@ -1,7 +1,7 @@
 import Badge from "@/components/atoms/Badge";
 
 const StatusBadge = ({ status, type = "default" }) => {
-  const getStatusConfig = (status, type) => {
+const getStatusConfig = (status, type) => {
     if (type === "chatAnalysis") {
       const positiveStatuses = ["smooth_progress", "learning_effectively", "feature_exploring", "goal_achieved", "highly_engaged"];
       const neutralStatuses = ["building_actively", "iterating", "experimenting", "asking_questions"];
@@ -23,7 +23,7 @@ const StatusBadge = ({ status, type = "default" }) => {
         return { variant: "help", label: status.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) };
       } else if (technicalStatuses.includes(status)) {
         return { variant: "technical", label: status.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) };
-} else if (specialStatuses.includes(status)) {
+      } else if (specialStatuses.includes(status)) {
         return { variant: "special", label: status.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) };
       }
     }
@@ -70,12 +70,11 @@ const StatusBadge = ({ status, type = "default" }) => {
         return { variant: "default", label: status || "Unknown" };
     }
   };
-
-  const { variant, label } = getStatusConfig(status, type);
+const { variant, label } = getStatusConfig(status, type);
 
   return (
-    <Badge variant={variant}>
-      {label}
+    <Badge variant={variant || "default"}>
+      {label || status}
     </Badge>
   );
 };

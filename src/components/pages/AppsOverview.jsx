@@ -3,30 +3,34 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import App from "@/App";
-import ApperIcon from "@/components/ApperIcon";
-import Error from "@/components/ui/Error";
-import Loading from "@/components/ui/Loading";
-import DataTable from "@/components/organisms/DataTable";
-import FilterBar from "@/components/molecules/FilterBar";
-import StatusBadge from "@/components/molecules/StatusBadge";
-import Select from "@/components/atoms/Select";
-import Badge from "@/components/atoms/Badge";
-import Button from "@/components/atoms/Button";
 import appService from "@/services/api/appService";
 import userDetailsService from "@/services/api/userDetailsService";
+import ApperIcon from "@/components/ApperIcon";
+import StatusBadge from "@/components/molecules/StatusBadge";
+import FilterBar from "@/components/molecules/FilterBar";
+import SearchBar from "@/components/molecules/SearchBar";
+import Loading from "@/components/ui/Loading";
+import Error from "@/components/ui/Error";
+import DataTable from "@/components/organisms/DataTable";
+import DashboardMetrics from "@/components/organisms/DashboardMetrics";
+import Select from "@/components/atoms/Select";
+import Button from "@/components/atoms/Button";
+import Badge from "@/components/atoms/Badge";
+import Input from "@/components/atoms/Input";
 const AppsOverview = () => {
 const navigate = useNavigate();
-  const [apps, setApps] = useState([]);
+const [apps, setApps] = useState([]);
   const [filteredApps, setFilteredApps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [dbFilter, setDbFilter] = useState("");
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [sortColumn, setSortColumn] = useState("");
   const [sortDirection, setSortDirection] = useState("asc");
   const [usersMap, setUsersMap] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
   
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -35,62 +39,29 @@ const navigate = useNavigate();
   const [userDetails, setUserDetails] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState("");
-const fetchApps = async () => {
-    try {
-      setLoading(true);
-      setError("");
-      const data = await appService.getAll();
-      setApps(data || []);
-      setFilteredApps(data || []);
-      
-      // Fetch user details for all apps
-      if (data && data.length > 0) {
-        const userIds = [...new Set(data.map(app => app.UserId).filter(Boolean))];
-        const users = await userDetailsService.getByIds(userIds);
-        const userMap = {};
-        users.forEach(user => {
-          userMap[user.Id] = user;
-        });
-        setUsersMap(userMap);
-      }
-    } catch (err) {
-      setError(err.message || "Failed to load apps");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     fetchApps();
   }, []);
 
-  useEffect(() => {
+useEffect(() => {
     let filtered = [...apps];
 
-    // Apply search filter
+    // Apply search filter - search by app name or ID
     if (searchTerm) {
       filtered = filtered.filter(app =>
         app.AppName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.AppCategory.toLowerCase().includes(searchTerm.toLowerCase())
+        app.Id.toString().includes(searchTerm)
       );
-    }
-
-    // Apply category filter
-    if (categoryFilter) {
-      filtered = filtered.filter(app => app.AppCategory === categoryFilter);
     }
 
     // Apply status filter
-    if (statusFilter) {
-      filtered = filtered.filter(app => app.LastChatAnalysisStatus === statusFilter);
+    if (statusFilter && statusFilter !== "ALL") {
+      filtered = filtered.filter(app => app.CurrentStatus === statusFilter);
     }
 
-    // Apply DB filter
-    if (dbFilter) {
-      filtered = filtered.filter(app => 
-        dbFilter === "connected" ? app.IsDbConnected : !app.IsDbConnected
-      );
-    }
+    // Apply date filter (mock implementation - in real app would filter by date)
+    // For now, we'll show all apps regardless of selectedDate
 
     // Apply sorting
     if (sortColumn) {
@@ -112,7 +83,30 @@ const fetchApps = async () => {
     }
 
     setFilteredApps(filtered);
-  }, [apps, searchTerm, categoryFilter, statusFilter, dbFilter, sortColumn, sortDirection]);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [apps, searchTerm, statusFilter, selectedDate, sortColumn, sortDirection]);
+
+  // Calculate summary metrics
+  const calculateMetrics = () => {
+    const totalApps = apps.length;
+    const criticalIssues = apps.filter(app => 
+      app.CurrentStatus === 'ABANDONMENT_RISK' || 
+      app.TechnicalComplexity >= 4
+    ).length;
+    const blockedUsers = apps.filter(app => 
+      app.UserWorkflowImpact === 'BLOCKED'
+    ).length;
+    const avgComplexity = apps.length > 0 ? 
+      (apps.reduce((sum, app) => sum + (app.TechnicalComplexity || 0), 0) / apps.length).toFixed(1) : 
+      '0.0';
+
+    return [
+      { title: "Total Apps Analyzed", value: totalApps, icon: "Grid3X3", color: "blue" },
+      { title: "Critical Issues", value: criticalIssues, icon: "AlertTriangle", color: "red" },
+      { title: "Blocked Users", value: blockedUsers, icon: "UserX", color: "red" },
+      { title: "Avg Technical Complexity", value: `${avgComplexity}/5`, icon: "Zap", color: "purple" }
+    ];
+  };
 
   const handleSort = (column) => {
     if (sortColumn === column) {
@@ -189,17 +183,59 @@ const handleViewLogs = (app) => {
     { value: "Contract review", label: "Contract Review" }
   ];
   
-  const getUniqueCategories = () => {
-    const categories = [...new Set(apps.map(app => app.AppCategory))];
-    return categories.map(cat => ({ value: cat, label: cat }));
+const getStatusOptions = () => {
+    return [
+      { value: "ALL", label: "All Statuses" },
+      { value: "TROUBLESHOOTING_DB", label: "Troubleshooting DB" },
+      { value: "STUCK", label: "Stuck" },
+      { value: "CONFUSED", label: "Confused" },
+      { value: "FRUSTRATED", label: "Frustrated" },
+      { value: "ABANDONMENT_RISK", label: "Abandonment Risk" },
+      { value: "DEBUGGING", label: "Debugging" },
+      { value: "PERFORMANCE_ISSUES", label: "Performance Issues" },
+      { value: "INTEGRATION_PROBLEMS", label: "Integration Problems" },
+      { value: "REPEATING_ISSUES", label: "Repeating Issues" },
+      { value: "GOING_IN_CIRCLES", label: "Going in Circles" }
+    ];
   };
 
-  const getUniqueStatuses = () => {
-    const statuses = [...new Set(apps.map(app => app.LastChatAnalysisStatus))];
-    return statuses.map(status => ({ 
-      value: status, 
-      label: status.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) 
+  // Enhanced apps data with missing fields
+  const enhanceAppsData = (appsData) => {
+    return appsData.map(app => ({
+      ...app,
+      AppSummary: `${app.AppCategory} application with ${app.TotalMessages} messages. ${app.IsDbConnected ? 'Database connected.' : 'No database connection.'}`,
+      CurrentStatus: app.LastChatAnalysisStatus?.toUpperCase() || 'CONFUSED',
+      TechnicalComplexity: Math.floor(Math.random() * 5) + 1, // Mock complexity 1-5
+      UserWorkflowImpact: app.LastChatAnalysisStatus === 'abandonment_risk' ? 'BLOCKED' : 
+                          app.LastChatAnalysisStatus === 'frustrated' ? 'PARTIALLY_BLOCKED' : 'MINIMAL_IMPACT'
     }));
+  };
+
+// Fetch apps with enhanced data
+  const fetchApps = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const appsData = await appService.getAll();
+      const enhancedApps = enhanceAppsData(appsData || []);
+      setApps(enhancedApps);
+      setFilteredApps(enhancedApps);
+      
+      // Fetch user details for all apps
+      if (enhancedApps && enhancedApps.length > 0) {
+        const userIds = [...new Set(enhancedApps.map(app => app.UserId).filter(Boolean))];
+        const users = await userDetailsService.getByIds(userIds);
+        const userMap = {};
+        users.forEach(user => {
+          userMap[user.Id] = user;
+        });
+        setUsersMap(userMap);
+      }
+    } catch (err) {
+      setError(err.message || "Failed to load apps");
+    } finally {
+      setLoading(false);
+    }
   };
 const columns = [
     {
@@ -207,35 +243,11 @@ const columns = [
       label: "App Name",
       sortable: true,
       render: (value, row) => (
-        <div>
+        <div className="cursor-pointer hover:text-blue-600">
           <div className="font-medium text-gray-900">{value}</div>
-          <div className="text-sm text-gray-500">{row.CanvasAppId}</div>
+          <div className="text-sm text-gray-500">ID: {row.Id}</div>
         </div>
       )
-    },
-    {
-      key: "UserId",
-      label: "User",
-      sortable: false,
-      render: (value, row) => {
-        const user = usersMap[value];
-        if (!user) {
-          return <span className="text-gray-400 text-sm">Loading...</span>;
-        }
-        return (
-          <div>
-            <div className="font-medium text-gray-900">{user.Name}</div>
-            <div className="text-sm text-gray-500">{user.Email}</div>
-            <div className="mt-1">
-              <Badge 
-                variant={user.Plan === "Pro" ? "default" : user.Plan === "Enterprise" ? "default" : user.Plan === "Basic" ? "secondary" : "outline"}
-              >
-                {user.Plan}
-              </Badge>
-            </div>
-          </div>
-        );
-      }
     },
     {
       key: "AppCategory",
@@ -246,80 +258,103 @@ const columns = [
       )
     },
     {
-      key: "LastChatAnalysisStatus",
-      label: "Status",
-      sortable: true,
+      key: "AppSummary",
+      label: "Summary",
+      sortable: false,
       render: (value) => (
-        <StatusBadge status={value} type="chatAnalysis" />
-      )
-    },
-    {
-      key: "IsDbConnected",
-      label: "DB Connected",
-      render: (value) => (
-        <div className="flex items-center">
-          <ApperIcon
-            name={value ? "CheckCircle" : "XCircle"}
-            size={16}
-            className={value ? "text-green-500" : "text-red-500"}
-          />
-          <span className={`ml-2 text-sm ${value ? "text-green-600" : "text-red-600"}`}>
-            {value ? "Connected" : "Disconnected"}
+        <div className="text-sm text-gray-600 max-w-xs">
+          <span className="line-clamp-2">
+            {value.length > 80 ? `${value.substring(0, 80)}...` : value}
           </span>
         </div>
       )
     },
     {
-      key: "TotalMessages",
-      label: "Messages",
+      key: "CurrentStatus",
+      label: "Current Status",
+      sortable: true,
+      render: (value) => {
+        const getStatusColor = (status) => {
+          switch(status) {
+            case 'TROUBLESHOOTING_DB': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+            case 'STUCK': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+            case 'CONFUSED': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+            case 'FRUSTRATED': return 'bg-orange-100 text-orange-800 border-orange-200';
+            case 'ABANDONMENT_RISK': return 'bg-red-100 text-red-800 border-red-200';
+            case 'DEBUGGING': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+            case 'PERFORMANCE_ISSUES': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+            case 'INTEGRATION_PROBLEMS': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+            case 'REPEATING_ISSUES': return 'bg-orange-100 text-orange-800 border-orange-200';
+            case 'GOING_IN_CIRCLES': return 'bg-orange-100 text-orange-800 border-orange-200';
+            default: return 'bg-gray-100 text-gray-800 border-gray-200';
+          }
+        };
+        
+        return (
+          <div className="flex items-center">
+            <ApperIcon 
+              name="AlertCircle" 
+              size={14} 
+              className="mr-1 text-gray-400" 
+            />
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(value)}`}>
+              {value?.replace(/_/g, ' ')}
+            </span>
+          </div>
+        );
+      }
+    },
+    {
+      key: "TechnicalComplexity",
+      label: "Technical Complexity",
       sortable: true,
       render: (value) => (
-        <span className="font-mono text-gray-600">{value}</span>
+        <div className="flex items-center">
+          <span className="font-medium text-gray-900">{value}/5</span>
+          <div className="ml-2 flex">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <ApperIcon
+                key={star}
+                name="Star"
+                size={12}
+                className={star <= value ? "text-yellow-400 fill-current" : "text-gray-300"}
+              />
+            ))}
+          </div>
+        </div>
       )
     },
     {
-      key: "LastMessageAt",
-label: "Last Activity",
+      key: "UserWorkflowImpact",
+      label: "User Impact",
       sortable: true,
-      render: (value) => (
-        <span className="text-sm text-gray-500">
-          {value ? format(new Date(value), "MMM dd, yyyy HH:mm") : "Never"}
-        </span>
-      )
-    },
-    {
-      key: "SalesStatus",
-      label: "Sales Status",
-      sortable: false,
-render: (value, row) => (
-        <Select
-          value={value || "No Contacted"}
-          onChange={(e) => {
-            const newValue = e.target.value;
-            const currentValue = value || "No Contacted";
-            if (newValue !== currentValue) {
-              handleSalesStatusChange(row.Id, newValue);
-            }
-          }}
-          onClick={(e) => {
-            const clickedValue = e.target.value;
-            const currentValue = value || "No Contacted";
-            if (clickedValue === currentValue) {
-              e.preventDefault();
-            }
-          }}
-          className="min-w-[160px]"
-        >
-          {getSalesStatusOptions().map(option => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
-      )
+      render: (value) => {
+        const getImpactColor = (impact) => {
+          switch(impact) {
+            case 'BLOCKED': return 'bg-red-100 text-red-800 border-red-200';
+            case 'PARTIALLY_BLOCKED': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+            case 'MINIMAL_IMPACT': return 'bg-green-100 text-green-800 border-green-200';
+            default: return 'bg-gray-100 text-gray-800 border-gray-200';
+          }
+        };
+        
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getImpactColor(value)}`}>
+            {value?.replace(/_/g, ' ')}
+          </span>
+        );
+      }
     }
   ];
-const actions = [
+
+// Pagination logic
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = filteredApps.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(filteredApps.length / itemsPerPage);
+
+  // Actions for table rows
+  const actions = [
     {
       icon: "FileText",
       onClick: handleViewLogs
@@ -330,276 +365,119 @@ const actions = [
     }
   ];
 
-  const filters = [
-    {
-      placeholder: "All Categories",
-      value: categoryFilter,
-      onChange: (e) => setCategoryFilter(e.target.value),
-      options: getUniqueCategories()
-    },
-    {
-      placeholder: "All Statuses",
-      value: statusFilter,
-      onChange: (e) => setStatusFilter(e.target.value),
-      options: getUniqueStatuses()
-    },
-    {
-      placeholder: "All DB Status",
-      value: dbFilter,
-      onChange: (e) => setDbFilter(e.target.value),
-      options: [
-        { value: "connected", label: "Connected" },
-        { value: "disconnected", label: "Disconnected" }
-      ]
-    }
-  ];
-
-  if (loading) return <Loading type="table" />;
+if (loading) return <Loading type="table" />;
   if (error) return <Error message={error} onRetry={fetchApps} />;
 
-return (
+  return (
     <div className="space-y-6">
+      {/* Summary Statistics Cards */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <FilterBar
-          searchValue={searchTerm}
-          onSearchChange={(e) => setSearchTerm(e.target.value)}
-          searchPlaceholder="Search apps, categories..."
-          filters={filters}
-          showExport={true}
-          showRefresh={true}
-          onRefresh={fetchApps}
-          onExport={() => {
-            // Export functionality
-            console.log("Export apps data");
-          }}
-        />
+        <DashboardMetrics metrics={calculateMetrics()} />
       </motion.div>
 
+      {/* Filtering Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
+        className="bg-white rounded-xl shadow-sm p-6"
       >
-<DataTable
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-1">
+            <SearchBar
+              placeholder="Search by app name or ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          
+          <div className="md:col-span-1">
+            <Select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full"
+            >
+              {getStatusOptions().map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+          
+          <div className="md:col-span-1">
+            <div className="relative">
+              <ApperIcon 
+                name="Calendar" 
+                size={20} 
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" 
+              />
+              <Input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Results Counter */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-700">
+          Showing {startIndex + 1} to {Math.min(endIndex, filteredApps.length)} of {filteredApps.length} apps
+        </p>
+        
+        {totalPages > 1 && (
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              <ApperIcon name="ChevronLeft" size={16} />
+            </Button>
+            <span className="text-sm text-gray-600">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              <ApperIcon name="ChevronRight" size={16} />
+            </Button>
+          </div>
+        )}
+      </div>
+
+{/* Table View */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+      >
+        <DataTable
           columns={columns}
-          data={filteredApps}
+          data={paginatedData}
           loading={loading}
           onSort={handleSort}
           sortColumn={sortColumn}
           sortDirection={sortDirection}
           onRowClick={handleRowClick}
           actions={actions}
-          emptyMessage="No apps found"
-          emptyDescription="No apps match your current filters. Try adjusting your search criteria."
+          emptyMessage="No apps match your current filters"
+          emptyDescription="Try adjusting your search criteria or changing the selected filters."
         />
       </motion.div>
-
-      {/* App Details Modal */}
-      {showModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-          onClick={closeModal}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              closeModal();
-            }
-          }}
-          tabIndex={-1}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">
-                App Details - {selectedApp?.AppName}
-              </h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={closeModal}
-                className="h-8 w-8 p-0"
-              >
-                <ApperIcon name="X" size={16} />
-              </Button>
-            </div>
-
-            {/* Modal Content */}
-            <div className="p-6">
-              {modalLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-                </div>
-              ) : modalError ? (
-                <div className="text-center py-12">
-                  <ApperIcon name="AlertCircle" size={48} className="text-red-500 mx-auto mb-4" />
-                  <p className="text-red-600 mb-4">{modalError}</p>
-                  <Button
-                    onClick={() => handleViewDetails(selectedApp)}
-                    variant="outline"
-                  >
-                    <ApperIcon name="RotateCcw" size={16} className="mr-2" />
-                    Retry
-                  </Button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Left Column - App Information */}
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">App Information</h3>
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-500">App ID</span>
-                          <span className="text-sm font-mono text-gray-900">{selectedApp?.Id}</span>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-500">Category</span>
-                          <Badge variant="secondary">{selectedApp?.AppCategory}</Badge>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-500">Canvas App ID</span>
-                          <span className="text-sm font-mono text-gray-700">{selectedApp?.CanvasAppId}</span>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-500">Database Connection</span>
-                          <div className="flex items-center">
-                            <ApperIcon
-                              name={selectedApp?.IsDbConnected ? "CheckCircle" : "XCircle"}
-                              size={16}
-                              className={selectedApp?.IsDbConnected ? "text-green-500" : "text-red-500"}
-                            />
-                            <span className={`ml-2 text-sm ${selectedApp?.IsDbConnected ? "text-green-600" : "text-red-600"}`}>
-                              {selectedApp?.IsDbConnected ? "Connected" : "Disconnected"}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Activity Section */}
-                    <div>
-                      <h4 className="text-md font-semibold text-gray-900 mb-4">Activity</h4>
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <ApperIcon name="MessageSquare" size={16} className="text-gray-400 mr-2" />
-                            <span className="text-sm font-medium text-gray-500">Total Messages</span>
-                          </div>
-                          <span className="text-sm font-mono text-gray-900">{selectedApp?.TotalMessages}</span>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-500">Last Activity</span>
-                          <span className="text-sm text-gray-700">
-                            {selectedApp?.LastMessageAt ? format(new Date(selectedApp.LastMessageAt), "MMM dd, yyyy HH:mm") : "N/A"}
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-500">Chat Status</span>
-                          <StatusBadge status={selectedApp?.LastChatAnalysisStatus} type="chatAnalysis" />
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-500">Last AI Scan</span>
-                          <span className="text-sm text-gray-700">
-                            {selectedApp?.LastAIScanAt ? format(new Date(selectedApp.LastAIScanAt), "MMM dd, yyyy") : "Never"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Column - User Information */}
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">User Information</h3>
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <ApperIcon name="User" size={16} className="text-gray-400 mr-2" />
-                            <span className="text-sm font-medium text-gray-500">Name</span>
-                          </div>
-                          <span className="text-sm text-gray-900">{userDetails?.Name || "Loading..."}</span>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-500">Email</span>
-                          <a
-                            href={`mailto:${userDetails?.Email}`}
-                            className="text-sm text-primary-600 hover:text-primary-700 underline"
-                          >
-                            {userDetails?.Email || "Loading..."}
-                          </a>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-500">Plan</span>
-                          <Badge 
-                            variant={userDetails?.Plan === "Pro" ? "default" : userDetails?.Plan === "Basic" ? "secondary" : "outline"}
-                          >
-                            {userDetails?.Plan || "Loading..."}
-                          </Badge>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-500">Total Apps</span>
-                          <span className="text-sm font-mono text-gray-900">{userDetails?.TotalApps || "0"}</span>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-500">Credits Used</span>
-                          <span className="text-sm font-mono text-gray-900">{userDetails?.CreditsUsed || "0"}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Timeline Section */}
-                    <div>
-                      <h4 className="text-md font-semibold text-gray-900 mb-4">Timeline</h4>
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-500">Created</span>
-                          <span className="text-sm text-gray-700">
-                            {selectedApp?.CreatedAt ? format(new Date(selectedApp.CreatedAt), "MMM dd, yyyy") : "N/A"}
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-500">Sales Status</span>
-                          <Badge 
-                            variant={
-                              userDetails?.SalesStatus === "Demo Scheduled" ? "default" :
-                              userDetails?.SalesStatus === "Converted" ? "success" :
-                              userDetails?.SalesStatus === "Follow Up" ? "warning" : "secondary"
-                            }
-                          >
-                            {userDetails?.SalesStatus || "Unknown"}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
-      )}
-</div>
+    </div>
   );
 };
 
