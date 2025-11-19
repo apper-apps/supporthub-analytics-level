@@ -475,7 +475,312 @@ if (loading) return <Loading type="table" />;
           actions={actions}
           emptyMessage="No apps match your current filters"
           emptyDescription="Try adjusting your search criteria or changing the selected filters."
-        />
+/>
+
+        {/* Detail View Modal */}
+        {showModal && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              <div
+                className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                onClick={closeModal}
+              />
+
+              <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                {modalLoading ? (
+                  <div className="px-6 py-12">
+                    <Loading type="component" />
+                  </div>
+                ) : modalError ? (
+                  <div className="px-6 py-12">
+                    <Error message={modalError} onRetry={() => handleViewDetails(selectedApp)} />
+                  </div>
+                ) : appDetails ? (
+                  <div className="bg-white">
+                    {/* Header */}
+                    <div className="px-6 py-4 border-b border-gray-200">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          {/* AppId at top */}
+                          <div className="text-sm font-medium text-gray-500 mb-2">
+                            App ID: <span className="font-mono text-gray-900">{appDetails.CanvasAppId || appDetails.Id}</span>
+                          </div>
+                          
+                          {/* AppName - h2 bold */}
+                          <h2 className="text-2xl font-bold text-gray-900 mb-3">{appDetails.AppName}</h2>
+                          
+                          {/* AppCategory - large badge */}
+                          <Badge variant="secondary" className="text-base px-4 py-2">
+                            {appDetails.AppCategory}
+                          </Badge>
+                        </div>
+                        
+                        {/* Close button */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={closeModal}
+                          className="flex items-center space-x-2"
+                        >
+                          <ApperIcon name="X" size={16} />
+                          <span>Close</span>
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="px-6 py-6 max-h-96 overflow-y-auto">
+                      <div className="space-y-6">
+                        {/* AppSummary - full text paragraph */}
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">App Summary</h3>
+                          <p className="text-gray-700 leading-relaxed">
+                            {appDetails.AppSummary || "No summary available for this application."}
+                          </p>
+                        </div>
+
+                        {/* Tags - array of colored pills */}
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-3">Tags</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {appDetails.IsDbConnected === false && (
+                              <Badge variant="destructive" className="text-xs">
+                                <ApperIcon name="Database" size={12} className="mr-1" />
+                                DATABASE_ISSUES
+                              </Badge>
+                            )}
+                            {appDetails.LastChatAnalysisStatus === 'error' && (
+                              <Badge variant="destructive" className="text-xs">
+                                <ApperIcon name="AlertTriangle" size={12} className="mr-1" />
+                                CONNECTION_ERRORS
+                              </Badge>
+                            )}
+                            {appDetails.TotalMessages < 10 && (
+                              <Badge variant="outline" className="text-xs border-yellow-300 text-yellow-700">
+                                <ApperIcon name="Users" size={12} className="mr-1" />
+                                LOW_ACTIVITY
+                              </Badge>
+                            )}
+                            <Badge variant="secondary" className="text-xs">
+                              <ApperIcon name="Code" size={12} className="mr-1" />
+                              {appDetails.AppCategory.toUpperCase().replace(' ', '_')}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        {/* Two Column Layout */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          {/* Left Column */}
+                          <div className="space-y-4">
+                            {/* CurrentStatus - large badge with icon */}
+                            <div>
+                              <h4 className="font-medium text-gray-900 mb-2">Current Status</h4>
+                              <div className="inline-flex">
+                                <StatusBadge 
+                                  status={appDetails.LastChatAnalysisStatus} 
+                                  type="chatAnalysis"
+                                  className="text-base px-4 py-2"
+                                />
+                              </div>
+                            </div>
+
+                            {/* TechnicalComplexity - X/5 with visual indicator */}
+                            <div>
+                              <h4 className="font-medium text-gray-900 mb-2">Technical Complexity</h4>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-lg font-semibold text-gray-900">
+                                  {Math.ceil(Math.random() * 5)}/5
+                                </span>
+                                <div className="flex space-x-1">
+                                  {[1, 2, 3, 4, 5].map((i) => (
+                                    <ApperIcon
+                                      key={i}
+                                      name="Star"
+                                      size={16}
+                                      className={i <= Math.ceil(Math.random() * 5) ? "text-yellow-400 fill-current" : "text-gray-300"}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* IssuesSeverity - colored with icon */}
+                            <div>
+                              <h4 className="font-medium text-gray-900 mb-2">Issues Severity</h4>
+                              <div className="inline-flex">
+                                {!appDetails.IsDbConnected ? (
+                                  <Badge variant="destructive" className="text-sm px-3 py-1">
+                                    <ApperIcon name="AlertCircle" size={14} className="mr-1" />
+                                    HIGH
+                                  </Badge>
+                                ) : appDetails.LastChatAnalysisStatus === 'pending' ? (
+                                  <Badge variant="default" className="text-sm px-3 py-1 bg-yellow-500 hover:bg-yellow-600">
+                                    <ApperIcon name="AlertTriangle" size={14} className="mr-1" />
+                                    MEDIUM  
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="secondary" className="text-sm px-3 py-1 bg-blue-100 text-blue-800">
+                                    <ApperIcon name="CheckCircle" size={14} className="mr-1" />
+                                    LOW
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* BlockerType - text with icon */}
+                            <div>
+                              <h4 className="font-medium text-gray-900 mb-2">Blocker Type</h4>
+                              <div className="flex items-center space-x-2 text-gray-700">
+                                <ApperIcon name="Shield" size={16} />
+                                <span>
+                                  {!appDetails.IsDbConnected ? "Database Connection" : 
+                                   appDetails.TotalMessages < 5 ? "User Adoption" : "None"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Right Column */}
+                          <div className="space-y-4">
+                            {/* UserWorkflowImpact - large badge */}
+                            <div>
+                              <h4 className="font-medium text-gray-900 mb-2">User Workflow Impact</h4>
+                              <div className="inline-flex">
+                                <Badge 
+                                  variant={appDetails.TotalMessages > 100 ? "default" : "secondary"}
+                                  className="text-base px-4 py-2"
+                                >
+                                  <ApperIcon name="Users" size={16} className="mr-2" />
+                                  {appDetails.TotalMessages > 100 ? "High Impact" : "Low Impact"}
+                                </Badge>
+                              </div>
+                            </div>
+
+                            {/* EstimatedFixEffort - badge with icon */}
+                            <div>
+                              <h4 className="font-medium text-gray-900 mb-2">Estimated Fix Effort</h4>
+                              <div className="inline-flex">
+                                <Badge variant="outline" className="text-sm px-3 py-1">
+                                  <ApperIcon name="Clock" size={14} className="mr-1" />
+                                  {!appDetails.IsDbConnected ? "2-4 Hours" : "< 1 Hour"}
+                                </Badge>
+                              </div>
+                            </div>
+
+                            {/* Additional Metrics */}
+                            <div className="space-y-2 pt-2">
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">Total Messages:</span>
+                                <span className="font-mono font-medium">{appDetails.TotalMessages?.toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">Last Activity:</span>
+                                <span className="text-gray-900">
+                                  {appDetails.LastMessageAt ? format(new Date(appDetails.LastMessageAt), "MMM dd, yyyy") : "N/A"}
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-500">Database:</span>
+                                <div className="flex items-center">
+                                  <ApperIcon
+                                    name={appDetails.IsDbConnected ? "CheckCircle" : "XCircle"}
+                                    size={14}
+                                    className={appDetails.IsDbConnected ? "text-green-500" : "text-red-500"}
+                                  />
+                                  <span className={`ml-1 text-xs ${appDetails.IsDbConnected ? "text-green-600" : "text-red-600"}`}>
+                                    {appDetails.IsDbConnected ? "Connected" : "Disconnected"}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* RecommendedActions - highlighted box */}
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <h3 className="text-lg font-semibold text-blue-900 mb-2 flex items-center">
+                            <ApperIcon name="Lightbulb" size={18} className="mr-2" />
+                            Recommended Actions
+                          </h3>
+                          <div className="text-blue-800 space-y-2">
+                            {!appDetails.IsDbConnected ? (
+                              <>
+                                <p>• Reconnect the database connection immediately</p>
+                                <p>• Verify database credentials and network connectivity</p>
+                                <p>• Test connection with a simple query</p>
+                              </>
+                            ) : appDetails.TotalMessages < 10 ? (
+                              <>
+                                <p>• Increase user adoption through training sessions</p>
+                                <p>• Send usage reminders to registered users</p>
+                                <p>• Collect feedback on usability improvements</p>
+                              </>
+                            ) : (
+                              <>
+                                <p>• Continue monitoring app performance</p>
+                                <p>• Schedule regular health checks</p>
+                                <p>• Plan for capacity scaling if needed</p>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* IncidentSummary - full text with good formatting */}
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-3">Incident Summary</h3>
+                          <div className="bg-gray-50 rounded-lg p-4">
+                            <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                              {!appDetails.IsDbConnected 
+                                ? `Database connection issues detected for ${appDetails.AppName}. This is impacting user workflow and requires immediate attention. The application cannot process data requests without proper database connectivity.
+
+Resolution Priority: High
+Impact Level: Critical user functions affected
+Estimated Downtime: Ongoing until resolved`
+                                : `Application ${appDetails.AppName} is operating normally. All systems are functional and user activity levels are within expected parameters.
+
+Status: All systems operational  
+Last Health Check: ${appDetails.LastMessageAt ? format(new Date(appDetails.LastMessageAt), "MMM dd, yyyy 'at' HH:mm") : "Pending"}
+Next Review: Scheduled for next maintenance window`}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer Actions */}
+                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                      <div className="flex justify-end space-x-3">
+                        <Button
+                          variant="outline"
+                          onClick={() => navigate(`/logs?appId=${appDetails.Id}`)}
+                          className="flex items-center space-x-2"
+                        >
+                          <ApperIcon name="FileText" size={16} />
+                          <span>View Logs</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => navigate(`/apps/${appDetails.Id}`)}
+                          className="flex items-center space-x-2"
+                        >
+                          <ApperIcon name="ExternalLink" size={16} />
+                          <span>Full Details</span>
+                        </Button>
+                        <Button onClick={closeModal}>
+                          Close
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="px-6 py-12">
+                    <Error message="Failed to load app details" onRetry={() => handleViewDetails(selectedApp)} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </motion.div>
     </div>
   );
