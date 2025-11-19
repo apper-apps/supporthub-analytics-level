@@ -7,9 +7,9 @@ const Sidebar = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const location = useLocation();
 
-  const navigation = [
+const navigation = [
     { name: "Dashboard", href: "/", icon: "BarChart3" },
-    { name: "Apps Overview", href: "/apps", icon: "Grid3X3" },
+    { name: "Daily Apps", href: "/apps", icon: "Grid3X3" },
     { name: "Users", href: "/users", icon: "Users" },
     { name: "AI Logs", href: "/logs", icon: "FileText" },
   ];
