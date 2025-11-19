@@ -1,19 +1,21 @@
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
-import ApperIcon from "@/components/ApperIcon";
-import Loading from "@/components/ui/Loading";
-import Error from "@/components/ui/Error";
-import Empty from "@/components/ui/Empty";
-import FilterBar from "@/components/molecules/FilterBar";
-import MetricCard from "@/components/molecules/MetricCard";
-import StatusBadge from "@/components/molecules/StatusBadge";
-import Badge from "@/components/atoms/Badge";
-import Button from "@/components/atoms/Button";
-import Input from "@/components/atoms/Input";
-import appService from "@/services/api/appService";
 import appAILogService from "@/services/api/appAILogService";
+import appService from "@/services/api/appService";
+import ApperIcon from "@/components/ApperIcon";
+import StatusBadge from "@/components/molecules/StatusBadge";
+import MetricCard from "@/components/molecules/MetricCard";
+import FilterBar from "@/components/molecules/FilterBar";
+import Loading from "@/components/ui/Loading";
+import Empty from "@/components/ui/Empty";
+import Error from "@/components/ui/Error";
+import Dashboard from "@/components/pages/Dashboard";
+import DataTable from "@/components/organisms/DataTable";
+import Button from "@/components/atoms/Button";
+import Badge from "@/components/atoms/Badge";
+import Input from "@/components/atoms/Input";
 
 const DailyAnalysis = () => {
   const [apps, setApps] = useState([]);
@@ -385,9 +387,199 @@ const getSeverityColor = (severity) => {
             icon="Search"
           />
         ) : (
-<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredApps.map((app, index) => {
-              const analysis = mockAnalysisData[app.Id] || {
+<DataTable
+            columns={[
+              {
+                key: 'app',
+                label: 'Application',
+                sortable: true,
+                render: (app) => (
+                  <div className="flex flex-col">
+                    <div className="flex items-center space-x-3">
+                      <span className="font-semibold text-gray-900">{app.AppName}</span>
+                      <Badge variant="secondary">{app.AppCategory}</Badge>
+                    </div>
+                    <span className="text-sm text-gray-500">#{app.Id}</span>
+                  </div>
+                )
+              },
+              {
+                key: 'status',
+                label: 'Status',
+                sortable: true,
+                render: (app) => (
+                  <StatusBadge status={app.LastChatAnalysisStatus} type="chatAnalysis" />
+                )
+              },
+              {
+                key: 'severity',
+                label: 'Severity',
+                sortable: true,
+                render: (app) => {
+                  const analysis = mockAnalysisData[app.Id] || {
+                    severity: "LOW",
+                    blockerType: "PERFORMANCE",
+                    userWorkflowImpact: "MINIMAL_IMPACT",
+                    technicalComplexity: 2.0,
+                    estimatedFixEffort: "LOW",
+                    issueTags: [],
+                    appSummary: "No analysis data available",
+                    incidentSummary: "No incident details available",
+                    recommendedActions: ["Monitor app performance", "Review user feedback"]
+                  };
+                  return (
+                    <div className={`flex items-center px-3 py-1 rounded-full text-sm font-medium ${getSeverityColor(analysis.severity)}`}>
+                      <ApperIcon name={getSeverityIcon(analysis.severity)} size={14} className="mr-1" />
+                      {analysis.severity}
+                    </div>
+                  );
+                }
+              },
+              {
+                key: 'blockerType',
+                label: 'Blocker Type',
+                sortable: true,
+                render: (app) => {
+                  const analysis = mockAnalysisData[app.Id] || {
+                    severity: "LOW",
+                    blockerType: "PERFORMANCE",
+                    userWorkflowImpact: "MINIMAL_IMPACT",
+                    technicalComplexity: 2.0,
+                    estimatedFixEffort: "LOW",
+                    issueTags: [],
+                    appSummary: "No analysis data available",
+                    incidentSummary: "No incident details available",
+                    recommendedActions: ["Monitor app performance", "Review user feedback"]
+                  };
+                  return (
+                    <div className="flex items-center">
+                      <ApperIcon name={getBlockerTypeIcon(analysis.blockerType)} size={16} className="mr-2 text-gray-600" />
+                      <span className="text-sm font-medium text-gray-900">
+                        {analysis.blockerType.replace(/_/g, ' ')}
+                      </span>
+                    </div>
+                  );
+                }
+              },
+              {
+                key: 'userImpact',
+                label: 'User Impact',
+                sortable: true,
+                render: (app) => {
+                  const analysis = mockAnalysisData[app.Id] || {
+                    severity: "LOW",
+                    blockerType: "PERFORMANCE",
+                    userWorkflowImpact: "MINIMAL_IMPACT",
+                    technicalComplexity: 2.0,
+                    estimatedFixEffort: "LOW",
+                    issueTags: [],
+                    appSummary: "No analysis data available",
+                    incidentSummary: "No incident details available",
+                    recommendedActions: ["Monitor app performance", "Review user feedback"]
+                  };
+                  return (
+                    <div className="flex items-center">
+                      <div className={`w-3 h-3 rounded-full mr-2 ${getImpactColor(analysis.userWorkflowImpact)}`}></div>
+                      <span className="text-sm font-medium text-gray-900">
+                        {analysis.userWorkflowImpact.replace(/_/g, ' ')}
+                      </span>
+                    </div>
+                  );
+                }
+              },
+              {
+                key: 'technicalComplexity',
+                label: 'Tech Complexity',
+                sortable: true,
+                render: (app) => {
+                  const analysis = mockAnalysisData[app.Id] || {
+                    severity: "LOW",
+                    blockerType: "PERFORMANCE",
+                    userWorkflowImpact: "MINIMAL_IMPACT",
+                    technicalComplexity: 2.0,
+                    estimatedFixEffort: "LOW",
+                    issueTags: [],
+                    appSummary: "No analysis data available",
+                    incidentSummary: "No incident details available",
+                    recommendedActions: ["Monitor app performance", "Review user feedback"]
+                  };
+                  return (
+                    <div className="flex items-center space-x-1">
+                      {getTechnicalComplexityBars(analysis.technicalComplexity)}
+                      <span className="text-sm font-medium text-gray-900 ml-2">
+                        {analysis.technicalComplexity}/5
+                      </span>
+                    </div>
+                  );
+                }
+              },
+              {
+                key: 'fixEffort',
+                label: 'Fix Effort',
+                sortable: true,
+                render: (app) => {
+                  const analysis = mockAnalysisData[app.Id] || {
+                    severity: "LOW",
+                    blockerType: "PERFORMANCE",
+                    userWorkflowImpact: "MINIMAL_IMPACT",
+                    technicalComplexity: 2.0,
+                    estimatedFixEffort: "LOW",
+                    issueTags: [],
+                    appSummary: "No analysis data available",
+                    incidentSummary: "No incident details available",
+                    recommendedActions: ["Monitor app performance", "Review user feedback"]
+                  };
+                  return (
+                    <div className="flex items-center">
+                      <ApperIcon name="Clock" size={14} className="mr-2 text-gray-600" />
+                      <span className={`text-sm font-medium px-2 py-0.5 rounded text-white ${getEffortColor(analysis.estimatedFixEffort)}`}>
+                        {analysis.estimatedFixEffort}
+                      </span>
+                    </div>
+                  );
+                }
+              },
+              {
+                key: 'actions',
+                label: 'Recommended Actions',
+                render: (app) => {
+                  const analysis = mockAnalysisData[app.Id] || {
+                    severity: "LOW",
+                    blockerType: "PERFORMANCE",
+                    userWorkflowImpact: "MINIMAL_IMPACT",
+                    technicalComplexity: 2.0,
+                    estimatedFixEffort: "LOW",
+                    issueTags: [],
+                    appSummary: "No analysis data available",
+                    incidentSummary: "No incident details available",
+                    recommendedActions: ["Monitor app performance", "Review user feedback"]
+                  };
+                  return (
+                    <div className="max-w-xs">
+                      <details className="group">
+                        <summary className="cursor-pointer text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center">
+                          <ApperIcon name="Lightbulb" size={14} className="mr-1" />
+                          View Actions ({analysis.recommendedActions.length})
+                        </summary>
+                        <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                          <ul className="space-y-1">
+                            {analysis.recommendedActions.map((action, actionIndex) => (
+                              <li key={actionIndex} className="text-sm text-blue-800 flex items-start">
+                                <ApperIcon name="ChevronRight" size={12} className="mr-1 mt-0.5 flex-shrink-0" />
+                                {action}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </details>
+                    </div>
+                  );
+                }
+              }
+            ]}
+            data={filteredApps.map(app => ({
+              ...app,
+              analysis: mockAnalysisData[app.Id] || {
                 severity: "LOW",
                 blockerType: "PERFORMANCE",
                 userWorkflowImpact: "MINIMAL_IMPACT",
@@ -397,124 +589,11 @@ const getSeverityColor = (severity) => {
                 appSummary: "No analysis data available",
                 incidentSummary: "No incident details available",
                 recommendedActions: ["Monitor app performance", "Review user feedback"]
-              };
-
-              return (
-<motion.div
-                  key={app.Id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
-                  className={`bg-white rounded-lg shadow-sm border-l-4 ${getSeverityColor(app.severity)} border border-gray-200 p-4 mb-4 hover:shadow-lg hover:-translate-y-1 transition-all duration-300`}
-                >
-                  {/* Card Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-lg font-bold text-gray-900">{app.AppName}</h3>
-                        <Badge variant="secondary">{app.AppCategory}</Badge>
-                      </div>
-                      <p className="text-sm text-gray-500">#{app.Id}</p>
-                    </div>
-                  </div>
-
-                  {/* Status & Severity Indicators */}
-                  <div className="flex items-center space-x-3 mb-4">
-                    <StatusBadge status={app.LastChatAnalysisStatus} type="chatAnalysis" />
-                    <div className={`flex items-center px-3 py-1 rounded-full text-sm font-medium ${getSeverityColor(analysis.severity)}`}>
-                      <ApperIcon name={getSeverityIcon(analysis.severity)} size={14} className="mr-1" />
-                      {analysis.severity}
-                    </div>
-                  </div>
-
-                  {/* Tags Section */}
-                  <div className="mb-4">
-                    <div className="flex flex-wrap gap-2">
-                      {analysis.issueTags.map((tag, tagIndex) => (
-                        <span
-                          key={tagIndex}
-                          className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-md font-medium"
-                        >
-                          {tag.replace(/_/g, ' ')}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Summary & Details */}
-                  <div className="mb-4">
-                    <h4 className="font-medium text-gray-900 mb-2">App Summary</h4>
-                    <p className="text-sm text-gray-700 mb-3">{analysis.appSummary}</p>
-                    
-                    <details className="group">
-                      <summary className="cursor-pointer text-sm text-primary-600 hover:text-primary-700 font-medium">
-                        View Incident Details
-                      </summary>
-                      <div className="mt-2 p-3 bg-gray-50 rounded-md">
-                        <p className="text-sm text-gray-700">{analysis.incidentSummary}</p>
-                      </div>
-                    </details>
-                  </div>
-
-                  {/* Metrics Grid */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <span className="text-sm text-gray-500">Technical Complexity</span>
-                      <div className="flex items-center space-x-1 mt-1">
-                        {getTechnicalComplexityBars(analysis.technicalComplexity)}
-                        <span className="text-sm font-medium text-gray-900 ml-2">
-                          {analysis.technicalComplexity}/5
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-500">Blocker Type</span>
-                      <div className="flex items-center mt-1">
-                        <ApperIcon name={getBlockerTypeIcon(analysis.blockerType)} size={16} className="mr-2 text-gray-600" />
-                        <span className="text-sm font-medium text-gray-900">
-                          {analysis.blockerType.replace(/_/g, ' ')}
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-500">User Impact</span>
-                      <div className="flex items-center mt-1">
-                        <div className={`w-3 h-3 rounded-full mr-2 ${getImpactColor(analysis.userWorkflowImpact)}`}></div>
-                        <span className="text-sm font-medium text-gray-900">
-                          {analysis.userWorkflowImpact.replace(/_/g, ' ')}
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-500">Fix Effort</span>
-                      <div className="flex items-center mt-1">
-                        <ApperIcon name="Clock" size={14} className="mr-2 text-gray-600" />
-                        <span className={`text-sm font-medium px-2 py-0.5 rounded text-white ${getEffortColor(analysis.estimatedFixEffort)}`}>
-                          {analysis.estimatedFixEffort}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Recommended Actions */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h5 className="font-medium text-blue-900 mb-2 flex items-center">
-                      <ApperIcon name="Lightbulb" size={16} className="mr-2" />
-                      Recommended Actions
-                    </h5>
-                    <ul className="space-y-1">
-                      {analysis.recommendedActions.map((action, actionIndex) => (
-                        <li key={actionIndex} className="text-sm text-blue-800 flex items-start">
-                          <ApperIcon name="ChevronRight" size={12} className="mr-1 mt-0.5 flex-shrink-0" />
-                          {action}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+              }
+            }))}
+loading={loading}
+            emptyMessage="No daily analysis data available"
+          />
         )}
       </motion.div>
     </div>
