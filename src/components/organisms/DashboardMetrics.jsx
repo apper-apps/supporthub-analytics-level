@@ -9,13 +9,13 @@ const DashboardMetrics = ({ metrics }) => {
     { title: "Active Sessions", value: 0, icon: "Activity", color: "purple" },
   ];
 
-  const displayMetrics = metrics && metrics.length > 0 ? metrics : defaultMetrics;
+  const displayMetrics = metrics || defaultMetrics;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {displayMetrics.map((metric, index) => (
         <motion.div
-          key={metric.title || index}
+          key={metric.title}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: index * 0.1 }}
@@ -34,4 +34,5 @@ const DashboardMetrics = ({ metrics }) => {
     </div>
   );
 };
+
 export default DashboardMetrics;
