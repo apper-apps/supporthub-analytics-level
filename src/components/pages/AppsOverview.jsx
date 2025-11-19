@@ -265,30 +265,6 @@ const columns = [
       )
     },
     {
-      key: "UserId",
-      label: "User",
-      sortable: false,
-      render: (value, row) => {
-        const user = usersMap[value];
-        if (!user) {
-          return <span className="text-gray-400 text-sm">Loading...</span>;
-        }
-        return (
-          <div>
-            <div className="font-medium text-gray-900">{user.Name}</div>
-            <div className="text-sm text-gray-500">{user.Email}</div>
-            <div className="mt-1">
-              <Badge 
-                variant={user.Plan === "Pro" ? "default" : user.Plan === "Enterprise" ? "default" : user.Plan === "Basic" ? "secondary" : "outline"}
-              >
-                {user.Plan}
-              </Badge>
-            </div>
-          </div>
-        );
-      }
-    },
-    {
       key: "AppCategory",
       label: "Category",
       sortable: true,
@@ -297,76 +273,49 @@ const columns = [
       )
     },
     {
-      key: "LastChatAnalysisStatus",
-      label: "Status",
-      sortable: true,
+      key: "AppSummary",
+      label: "Summary",
+      sortable: false,
       render: (value) => (
-        <StatusBadge status={value} type="chatAnalysis" />
-      )
-    },
-    {
-      key: "IsDbConnected",
-      label: "DB Connected",
-      render: (value) => (
-        <div className="flex items-center">
-          <ApperIcon
-            name={value ? "CheckCircle" : "XCircle"}
-            size={16}
-            className={value ? "text-green-500" : "text-red-500"}
-          />
-          <span className={`ml-2 text-sm ${value ? "text-green-600" : "text-red-600"}`}>
-            {value ? "Connected" : "Disconnected"}
-          </span>
+        <div className="max-w-xs">
+          <span className="text-sm text-gray-700 line-clamp-2">{value || "No summary available"}</span>
         </div>
       )
     },
     {
-      key: "TotalMessages",
-      label: "Messages",
+      key: "CurrentStatus",
+      label: "Current Status",
       sortable: true,
       render: (value) => (
-        <span className="font-mono text-gray-600">{value}</span>
+        <StatusBadge status={value} type="general" />
       )
     },
     {
-      key: "LastMessageAt",
-label: "Last Activity",
+      key: "TechnicalComplexity",
+      label: "Complexity",
       sortable: true,
       render: (value) => (
-        <span className="text-sm text-gray-500">
-          {value ? format(new Date(value), "MMM dd, yyyy HH:mm") : "Never"}
-        </span>
+        <div className="flex items-center">
+          <span className="text-sm font-medium text-gray-700">{value || "Unknown"}</span>
+        </div>
       )
     },
     {
-      key: "SalesStatus",
-      label: "Sales Status",
+      key: "IncidentSummary",
+      label: "Incident Summary",
       sortable: false,
-render: (value, row) => (
-        <Select
-          value={value || "No Contacted"}
-          onChange={(e) => {
-            const newValue = e.target.value;
-            const currentValue = value || "No Contacted";
-            if (newValue !== currentValue) {
-              handleSalesStatusChange(row.Id, newValue);
-            }
-          }}
-          onClick={(e) => {
-            const clickedValue = e.target.value;
-            const currentValue = value || "No Contacted";
-            if (clickedValue === currentValue) {
-              e.preventDefault();
-            }
-          }}
-          className="min-w-[160px]"
-        >
-          {getSalesStatusOptions().map(option => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
+      render: (value) => (
+        <div className="max-w-xs">
+          <span className="text-sm text-gray-700 line-clamp-2">{value || "No incidents"}</span>
+        </div>
+      )
+    },
+    {
+      key: "UserWorkflowImpact",
+      label: "Workflow Impact",
+      sortable: true,
+      render: (value) => (
+        <div className="text-sm text-gray-700">{value || "No impact data"}</div>
       )
     }
   ];
