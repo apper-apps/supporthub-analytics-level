@@ -1,7 +1,7 @@
-import { Outlet } from "react-router-dom";
-import Sidebar from "@/components/organisms/Sidebar";
+import { Outlet, useLocation } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import PageHeader from "@/components/organisms/PageHeader";
-import { useLocation } from "react-router-dom";
+import Sidebar from "@/components/organisms/Sidebar";
 
 const Layout = () => {
   const location = useLocation();
@@ -42,7 +42,7 @@ const Layout = () => {
     }
   };
 
-  const pageInfo = getPageInfo();
+const pageInfo = getPageInfo();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -52,7 +52,6 @@ const Layout = () => {
         <PageHeader 
           title={pageInfo.title}
           subtitle={pageInfo.subtitle}
-          onRefresh={() => window.location.reload()}
         />
         
         <main className="p-6">
