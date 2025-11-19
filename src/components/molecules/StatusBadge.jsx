@@ -48,7 +48,8 @@ const getStatusConfig = (status, type) => {
     }
     
     // Default status handling
-    switch (status?.toLowerCase()) {
+switch (status?.toLowerCase()) {
+      // Basic active/inactive states
       case "active":
       case "connected":
       case "online":
@@ -60,12 +61,87 @@ const getStatusConfig = (status, type) => {
       case "pending":
       case "processing":
         return { variant: "warning", label: status };
+      
+      // Plan types
       case "pro":
       case "premium":
         return { variant: "primary", label: status };
       case "free":
       case "basic":
         return { variant: "secondary", label: status };
+      
+      // Critical severity statuses (RED)
+      case "abandonment_risk":
+      case "completely_lost":
+      case "angry":
+      case "giving_up":
+      case "blocked":
+      case "critical":
+        return { variant: "danger", label: status.replace(/_/g, ' ') };
+      
+      // High severity technical issues (RED)
+      case "troubleshooting_db":
+      case "database_error":
+      case "connection_failed":
+      case "system_error":
+        return { variant: "danger", label: status.replace(/_/g, ' ') };
+      
+      // Medium-high severity (ORANGE/YELLOW)
+      case "frustrated":
+      case "stuck":
+      case "confused":
+      case "repeating_issues":
+      case "going_in_circles":
+      case "partially_blocked":
+        return { variant: "warning", label: status.replace(/_/g, ' ') };
+      
+      // Medium severity technical (BLUE/INDIGO) 
+      case "debugging":
+      case "performance_issues":
+      case "integration_problems":
+      case "needs_optimization":
+        return { variant: "primary", label: status.replace(/_/g, ' ') };
+      
+      // Help/guidance needed (ORANGE)
+      case "needs_guidance":
+      case "requesting_examples":
+      case "seeking_alternatives":
+      case "documentation_needed":
+        return { variant: "warning", label: status.replace(/_/g, ' ') };
+      
+      // Positive progress states (GREEN)
+      case "smooth_progress":
+      case "learning_effectively":
+      case "feature_exploring":
+      case "goal_achieved":
+      case "highly_engaged":
+      case "resolved":
+      case "completed":
+        return { variant: "success", label: status.replace(/_/g, ' ') };
+      
+      // Sales statuses
+      case "demo_scheduled":
+      case "demo completed":
+      case "proposal_sent":
+      case "negotiating":
+      case "contract review":
+        return { variant: "primary", label: status.replace(/_/g, ' ') };
+      case "closed_won":
+        return { variant: "success", label: status.replace(/_/g, ' ') };
+      case "closed_lost":
+      case "no_contacted":
+        return { variant: "danger", label: status.replace(/_/g, ' ') };
+      case "follow_up_required":
+      case "follow up schedule":
+        return { variant: "warning", label: status.replace(/_/g, ' ') };
+      
+      // Neutral/informational states
+      case "minimal_impact":
+      case "monitoring":
+      case "in_progress":
+      case "reviewing":
+        return { variant: "secondary", label: status.replace(/_/g, ' ') };
+      
       default:
         return { variant: "default", label: status || "Unknown" };
     }
