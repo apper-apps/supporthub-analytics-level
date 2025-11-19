@@ -192,12 +192,12 @@ const DailyAnalysis = () => {
     }
   };
 
-  const getSeverityColor = (severity) => {
+const getSeverityColor = (severity) => {
     switch (severity) {
-      case "HIGH": return "text-red-600 bg-red-100";
-      case "MEDIUM": return "text-orange-600 bg-orange-100";
-      case "LOW": return "text-blue-600 bg-blue-100";
-      default: return "text-gray-600 bg-gray-100";
+      case "HIGH": return "border-l-red-500";
+      case "MEDIUM": return "border-l-orange-500";
+      case "LOW": return "border-l-blue-500";
+      default: return "border-l-gray-500";
     }
   };
 
@@ -400,12 +400,12 @@ const DailyAnalysis = () => {
               };
 
               return (
-                <motion.div
+<motion.div
                   key={app.Id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.1 }}
-                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                  className={`bg-white rounded-lg shadow-sm border-l-4 ${getSeverityColor(app.severity)} border border-gray-200 p-4 mb-4 hover:shadow-lg hover:-translate-y-1 transition-all duration-300`}
                 >
                   {/* Card Header */}
                   <div className="flex items-start justify-between mb-4">
