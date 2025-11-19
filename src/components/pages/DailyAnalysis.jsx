@@ -393,29 +393,34 @@ const getSeverityColor = (severity) => {
                 key: 'app',
                 label: 'Application',
                 sortable: true,
-                render: (app) => (
-                  <div className="flex flex-col">
-                    <div className="flex items-center space-x-3">
-                      <span className="font-semibold text-gray-900">{app.AppName}</span>
-                      <Badge variant="secondary">{app.AppCategory}</Badge>
+render: (app) => {
+                  if (!app) return <span className="text-gray-400">No data</span>;
+                  return (
+                    <div className="flex flex-col">
+                      <div className="flex items-center space-x-3">
+                        <span className="font-semibold text-gray-900">{app.AppName || 'Unknown App'}</span>
+                        <Badge variant="secondary">{app.AppCategory || 'Uncategorized'}</Badge>
+                      </div>
+                      <span className="text-sm text-gray-500">#{app.Id || 'N/A'}</span>
                     </div>
-                    <span className="text-sm text-gray-500">#{app.Id}</span>
-                  </div>
-                )
+                  );
+                }
               },
               {
                 key: 'status',
                 label: 'Status',
                 sortable: true,
-                render: (app) => (
-                  <StatusBadge status={app.LastChatAnalysisStatus} type="chatAnalysis" />
-                )
+render: (app) => {
+                  if (!app) return <span className="text-gray-400">No status</span>;
+                  return <StatusBadge status={app.LastChatAnalysisStatus || 'UNKNOWN'} type="chatAnalysis" />;
+                }
               },
               {
                 key: 'severity',
                 label: 'Severity',
                 sortable: true,
-                render: (app) => {
+render: (app) => {
+                  if (!app) return <span className="text-gray-400">No data</span>;
                   const analysis = mockAnalysisData[app.Id] || {
                     severity: "LOW",
                     blockerType: "PERFORMANCE",
@@ -439,7 +444,8 @@ const getSeverityColor = (severity) => {
                 key: 'blockerType',
                 label: 'Blocker Type',
                 sortable: true,
-                render: (app) => {
+render: (app) => {
+                  if (!app) return <span className="text-gray-400">No data</span>;
                   const analysis = mockAnalysisData[app.Id] || {
                     severity: "LOW",
                     blockerType: "PERFORMANCE",
@@ -465,7 +471,8 @@ const getSeverityColor = (severity) => {
                 key: 'userImpact',
                 label: 'User Impact',
                 sortable: true,
-                render: (app) => {
+render: (app) => {
+                  if (!app) return <span className="text-gray-400">No data</span>;
                   const analysis = mockAnalysisData[app.Id] || {
                     severity: "LOW",
                     blockerType: "PERFORMANCE",
@@ -491,7 +498,8 @@ const getSeverityColor = (severity) => {
                 key: 'technicalComplexity',
                 label: 'Tech Complexity',
                 sortable: true,
-                render: (app) => {
+render: (app) => {
+                  if (!app) return <span className="text-gray-400">No data</span>;
                   const analysis = mockAnalysisData[app.Id] || {
                     severity: "LOW",
                     blockerType: "PERFORMANCE",
@@ -517,7 +525,8 @@ const getSeverityColor = (severity) => {
                 key: 'fixEffort',
                 label: 'Fix Effort',
                 sortable: true,
-                render: (app) => {
+render: (app) => {
+                  if (!app) return <span className="text-gray-400">No data</span>;
                   const analysis = mockAnalysisData[app.Id] || {
                     severity: "LOW",
                     blockerType: "PERFORMANCE",
@@ -542,7 +551,8 @@ const getSeverityColor = (severity) => {
               {
                 key: 'actions',
                 label: 'Recommended Actions',
-                render: (app) => {
+render: (app) => {
+                  if (!app) return <span className="text-gray-400">No data</span>;
                   const analysis = mockAnalysisData[app.Id] || {
                     severity: "LOW",
                     blockerType: "PERFORMANCE",
@@ -559,11 +569,11 @@ const getSeverityColor = (severity) => {
                       <details className="group">
                         <summary className="cursor-pointer text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center">
                           <ApperIcon name="Lightbulb" size={14} className="mr-1" />
-                          View Actions ({analysis.recommendedActions.length})
+                          View Actions ({analysis.recommendedActions?.length || 0})
                         </summary>
                         <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
                           <ul className="space-y-1">
-                            {analysis.recommendedActions.map((action, actionIndex) => (
+                            {(analysis.recommendedActions || []).map((action, actionIndex) => (
                               <li key={actionIndex} className="text-sm text-blue-800 flex items-start">
                                 <ApperIcon name="ChevronRight" size={12} className="mr-1 mt-0.5 flex-shrink-0" />
                                 {action}
@@ -577,7 +587,7 @@ const getSeverityColor = (severity) => {
                 }
               }
             ]}
-            data={filteredApps.map(app => ({
+data={filteredApps.map(app => app ? ({
               ...app,
               analysis: mockAnalysisData[app.Id] || {
                 severity: "LOW",
@@ -590,7 +600,7 @@ const getSeverityColor = (severity) => {
                 incidentSummary: "No incident details available",
                 recommendedActions: ["Monitor app performance", "Review user feedback"]
               }
-            }))}
+            }) : null).filter(Boolean)}
 loading={loading}
             emptyMessage="No daily analysis data available"
           />
