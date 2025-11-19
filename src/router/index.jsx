@@ -4,7 +4,6 @@ import Layout from '@/components/pages/Layout';
 
 // Lazy load all page components for better performance
 const Dashboard = lazy(() => import('@/components/pages/Dashboard'));
-const DailyAnalysis = lazy(() => import('@/components/pages/DailyAnalysis'));
 const UserDashboard = lazy(() => import('@/components/pages/UserDashboard'));
 const AppsOverview = lazy(() => import('@/components/pages/AppsOverview'));
 const AppDetail = lazy(() => import('@/components/pages/AppDetail'));
@@ -38,10 +37,6 @@ const mainRoutes = [
     path: "",
     index: true,
     element: withSuspense(Dashboard),
-},
-  {
-    path: "daily-analysis",
-    element: withSuspense(DailyAnalysis),
   },
   {
     path: "users",

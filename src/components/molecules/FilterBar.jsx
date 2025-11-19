@@ -12,12 +12,9 @@ const FilterBar = ({
   onExport,
   showRefresh = false,
   onRefresh,
-  showDatePicker = false,
-  dateValue,
-  onDateChange,
   children
 }) => {
-return (
+  return (
     <div className="bg-white rounded-xl p-6 shadow-sm mb-6">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex flex-col sm:flex-row gap-4 flex-1">
@@ -28,7 +25,7 @@ return (
             className="flex-1 max-w-md"
           />
           
-          <div className="flex flex-wrap gap-3">
+          <div className="flex gap-3">
             {filters.map((filter, index) => (
               <Select
                 key={index}
@@ -44,14 +41,6 @@ return (
                 ))}
               </Select>
             ))}
-            {showDatePicker && (
-              <input
-                type="date"
-                value={dateValue}
-                onChange={onDateChange}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm min-w-[140px]"
-              />
-            )}
           </div>
         </div>
         
