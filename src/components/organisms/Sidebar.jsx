@@ -1,6 +1,6 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import ApperIcon from "@/components/ApperIcon";
 
 const Sidebar = () => {
@@ -14,7 +14,7 @@ const Sidebar = () => {
     { name: "AI Logs", href: "/logs", icon: "FileText" },
   ];
 
-  const SidebarContent = () => (
+const SidebarContent = () => (
     <div className="flex flex-col h-full bg-white border-r border-gray-200">
       {/* Logo */}
       <div className="flex items-center px-6 py-6 border-b border-gray-200">
@@ -22,13 +22,13 @@ const Sidebar = () => {
           <ApperIcon name="Headphones" size={24} className="text-white" />
         </div>
         <div className="ml-3">
-          <h1 className="text-xl font-bold text-gray-900">SupportHub</h1>
-          <p className="text-sm text-gray-500">Analytics</p>
+          <h2 className="text-xl font-bold text-gray-900">Apper</h2>
+          <p className="text-sm text-gray-500">AI Platform</p>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-2">
+      <nav className="flex-1 px-4 py-6 space-y-1">
         {navigation.map((item) => (
           <NavLink
             key={item.name}
