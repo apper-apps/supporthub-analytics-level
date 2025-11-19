@@ -64,7 +64,7 @@ const fetchApps = async () => {
     fetchApps();
   }, []);
 
-  useEffect(() => {
+useEffect(() => {
     let filtered = [...apps];
 
     // Apply search filter
@@ -92,7 +92,19 @@ const fetchApps = async () => {
       );
     }
 
-    // Apply sorting
+    // Auto-sort by severity: HIGH → MEDIUM → LOW
+    const severityOrder = { 'HIGH': 0, 'MEDIUM': 1, 'LOW': 2 };
+    const mockSeverityData = {
+      1: 'HIGH', 2: 'MEDIUM', 3: 'LOW', 4: 'HIGH', 5: 'MEDIUM'
+    };
+
+    filtered.sort((a, b) => {
+      const aSeverity = mockSeverityData[a.Id] || 'LOW';
+      const bSeverity = mockSeverityData[b.Id] || 'LOW';
+      return severityOrder[aSeverity] - severityOrder[bSeverity];
+    });
+
+    // Apply additional sorting if specified
     if (sortColumn) {
       filtered.sort((a, b) => {
         let aValue = a[sortColumn];
@@ -113,6 +125,45 @@ const fetchApps = async () => {
 
     setFilteredApps(filtered);
   }, [apps, searchTerm, categoryFilter, statusFilter, dbFilter, sortColumn, sortDirection]);
+
+  // Clear all filters function
+  const clearAllFilters = () => {
+    setSearchTerm("");
+    setCategoryFilter("");
+    setStatusFilter("");
+    setDbFilter("");
+    setSortColumn("");
+    setSortDirection("asc");
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters = searchTerm || categoryFilter || statusFilter || dbFilter;
+
+  // Get app severity for display
+  const getAppSeverity = (appId) => {
+    const mockSeverityData = {
+      1: 'HIGH', 2: 'MEDIUM', 3: 'LOW', 4: 'HIGH', 5: 'MEDIUM'
+    };
+    return mockSeverityData[appId] || 'LOW';
+  };
+
+  const getSeverityIcon = (severity) => {
+    switch (severity) {
+      case "HIGH": return "AlertTriangle";
+      case "MEDIUM": return "AlertCircle";
+      case "LOW": return "Info";
+      default: return "Info";
+    }
+  };
+
+  const getSeverityColor = (severity) => {
+    switch (severity) {
+      case "HIGH": return "border-l-red-500 bg-red-50";
+      case "MEDIUM": return "border-l-orange-500 bg-orange-50";
+      case "LOW": return "border-l-blue-500 bg-blue-50";
+      default: return "border-l-gray-500 bg-gray-50";
+    }
+  };
 
   const handleSort = (column) => {
     if (sortColumn === column) {
@@ -379,23 +430,170 @@ return (
         />
       </motion.div>
 
+      {/* Results Counter and Clear Filters */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
+        className="flex items-center justify-between"
       >
-<DataTable
-          columns={columns}
-          data={filteredApps}
-          loading={loading}
-          onSort={handleSort}
-          sortColumn={sortColumn}
-          sortDirection={sortDirection}
-          onRowClick={handleRowClick}
-          actions={actions}
-          emptyMessage="No apps found"
-          emptyDescription="No apps match your current filters. Try adjusting your search criteria."
-        />
+        <div className="text-sm text-gray-600">
+          Showing {filteredApps.length} of {apps.length} apps
+        </div>
+        {hasActiveFilters && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={clearAllFilters}
+          >
+            <ApperIcon name="X" size={14} className="mr-2" />
+            Clear all filters
+          </Button>
+        )}
+      </motion.div>
+
+      {/* Apps Grid */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+      >
+        {loading ? (
+          <Loading type="dashboard" />
+        ) : error ? (
+          <Error message={error} onRetry={fetchApps} />
+        ) : filteredApps.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+            <ApperIcon name="Search" size={48} className="text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No apps match your current filters</h3>
+            <p className="text-gray-600 mb-4">Try adjusting your search criteria or clear all filters to see all apps.</p>
+            {hasActiveFilters && (
+              <Button onClick={clearAllFilters}>
+                Clear all filters
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredApps.map((app, index) => {
+              const user = usersMap[app.UserId];
+              const appSeverity = getAppSeverity(app.Id);
+              
+              return (
+                <motion.div
+                  key={app.Id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                  className={`bg-white rounded-lg shadow-sm border-l-4 ${getSeverityColor(appSeverity)} border border-gray-200 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer`}
+                  onClick={() => handleRowClick(app)}
+                >
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <ApperIcon 
+                          name={getSeverityIcon(appSeverity)} 
+                          size={16} 
+                          className={`${
+                            appSeverity === 'HIGH' ? 'text-red-500' : 
+                            appSeverity === 'MEDIUM' ? 'text-orange-500' : 'text-blue-500'
+                          }`}
+                        />
+                        <span className={`text-xs font-medium px-2 py-1 rounded ${
+                          appSeverity === 'HIGH' ? 'bg-red-100 text-red-800' : 
+                          appSeverity === 'MEDIUM' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {appSeverity}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">{app.AppName}</h3>
+                      <p className="text-sm text-gray-500">#{app.Id} • {app.CanvasAppId}</p>
+                    </div>
+                  </div>
+
+                  {/* Status and Category */}
+                  <div className="flex items-center space-x-2 mb-4">
+                    <StatusBadge status={app.LastChatAnalysisStatus} type="chatAnalysis" />
+                    <Badge variant="secondary">{app.AppCategory}</Badge>
+                  </div>
+
+                  {/* User Info */}
+                  {user && (
+                    <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{user.Name}</p>
+                          <p className="text-xs text-gray-600">{user.Email}</p>
+                        </div>
+                        <Badge 
+                          variant={user.Plan === "Pro" ? "default" : user.Plan === "Enterprise" ? "default" : user.Plan === "Basic" ? "secondary" : "outline"}
+                        >
+                          {user.Plan}
+                        </Badge>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Metrics */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">DB Status</p>
+                      <div className="flex items-center">
+                        <ApperIcon
+                          name={app.IsDbConnected ? "CheckCircle" : "XCircle"}
+                          size={14}
+                          className={app.IsDbConnected ? "text-green-500" : "text-red-500"}
+                        />
+                        <span className={`ml-1 text-xs ${app.IsDbConnected ? "text-green-600" : "text-red-600"}`}>
+                          {app.IsDbConnected ? "Connected" : "Disconnected"}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Messages</p>
+                      <p className="text-sm font-mono text-gray-900">{app.TotalMessages}</p>
+                    </div>
+                  </div>
+
+                  {/* Last Activity */}
+                  <div className="text-xs text-gray-500">
+                    Last activity: {app.LastMessageAt ? format(new Date(app.LastMessageAt), "MMM dd, yyyy") : "Never"}
+                  </div>
+
+                  {/* Sales Status */}
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <Select
+                      value={app.SalesStatus || "No Contacted"}
+                      onChange={(e) => {
+                        const newValue = e.target.value;
+                        const currentValue = app.SalesStatus || "No Contacted";
+                        if (newValue !== currentValue) {
+                          handleSalesStatusChange(app.Id, newValue);
+                        }
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const clickedValue = e.target.value;
+                        const currentValue = app.SalesStatus || "No Contacted";
+                        if (clickedValue === currentValue) {
+                          e.preventDefault();
+                        }
+                      }}
+                      className="text-xs w-full"
+                    >
+                      {getSalesStatusOptions().map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
       </motion.div>
 
       {/* App Details Modal */}

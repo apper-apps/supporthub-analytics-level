@@ -53,7 +53,7 @@ const DataTable = ({
     );
   }
 
-  return (
+return (
     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
